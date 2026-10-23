@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
         .eq("user_id", user).eq("provider", "steam").maybeSingle();
       if (!link) return json({ linked: false }, 200, 60);
       const d = await steamApi("IPlayerService/GetOwnedGames/v1", {
-        steamid: link.account_id, include_appinfo: "1", include_played_free_games: "1",
+        steamid: link.account_id, include_appinfo: "1", include_played_free_games: "1", include_free_sub: "1", skip_unvetted_apps: "0",
       });
       const list = d?.response?.games;
       const base = {
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
       if (!link) return json({ linked: false });
       const saved = { linked: true, unlocked: link.ach_unlocked, total: link.ach_total, perfect: link.perfect, at: link.stats_at };
       if (link.stats_at && Date.now() - Date.parse(link.stats_at) < 60 * 60 * 1000) return json({ ...saved, cached: true });
-      const d = await steamApi("IPlayerService/GetOwnedGames/v1", { steamid: link.account_id, include_played_free_games: "1" });
+      const d = await steamApi("IPlayerService/GetOwnedGames/v1", { steamid: link.account_id, include_played_free_games: "1", include_free_sub: "1", skip_unvetted_apps: "0" });
       if (!Array.isArray(d?.response?.games)) return json({ ...saved, private: true });
       const played = d.response.games.filter((g: any) => (g.playtime_forever ?? 0) > 0)
         .sort((a: any, b: any) => b.playtime_forever - a.playtime_forever).slice(0, 400);
