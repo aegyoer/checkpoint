@@ -215,40 +215,112 @@ dialog > form{display:contents}
 .player iframe,.player video{width:100%;height:100%;border:0;display:block}
 .player-msg{color:#cfd3da;padding:24px;text-align:center;max-width:420px}
 
-/* ---------- Profile page ---------- */
-.p-card{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--radius) + 4px);overflow:hidden;margin-top:24px}
+/* ---------- Profile page ----------
+   The profile uses its OWN theme (set in Edit profile), so it looks
+   the same for everyone who visits it. */
+.pview{
+  --panel-2:color-mix(in srgb, var(--panel) 90%, var(--text));
+  --line:color-mix(in srgb, var(--panel) 82%, var(--text));
+  --muted:color-mix(in srgb, var(--text) 60%, var(--bg));
+  background:var(--bg);color:var(--text);font-family:var(--font-body);
+  border:1px solid var(--line);border-radius:calc(var(--radius) + 8px);
+  padding:16px;margin:24px 0 60px;
+}
+.pview h1,.pview h2,.pview h3{font-family:var(--font-head)}
+.pview[data-bg="glow"]{background:radial-gradient(900px 420px at 50% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%) no-repeat, var(--bg)}
+.pview[data-bg="aurora"]{background:radial-gradient(600px 360px at 8% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%) no-repeat, radial-gradient(600px 360px at 95% 15%, color-mix(in srgb, var(--c-playing) 16%, transparent), transparent 70%) no-repeat, var(--bg)}
+.pview[data-bg="grid"]{background-color:var(--bg);background-image:linear-gradient(color-mix(in srgb, var(--text) 6%, transparent) 1px, transparent 1px),linear-gradient(90deg, color-mix(in srgb, var(--text) 6%, transparent) 1px, transparent 1px);background-size:30px 30px}
+.pview[data-head="pixel"] h1{font-size:1.1rem;line-height:1.6}
+.pview[data-head="pixel"] h2{font-size:.82rem;line-height:1.7}
+.pview[data-head="pixel"] .stat b{font-family:var(--font-body)}
+
+.p-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.p-tools .grow{flex:1;min-width:180px;position:relative}
+.p-note{background:var(--panel-2);border:1px dashed var(--accent);border-radius:var(--radius);padding:10px 14px;font-size:.88rem;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+.p-card{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--radius) + 4px);overflow:hidden;padding-bottom:22px;position:relative}
 .p-banner{height:220px;position:relative;background:linear-gradient(120deg,var(--accent),color-mix(in srgb, var(--accent) 35%, var(--bg)) 60%, var(--bg))}
 .p-banner.b-solid{background:var(--accent)}
 .p-banner img{width:100%;height:100%;object-fit:cover;display:block}
 .p-main{display:flex;align-items:flex-start;gap:16px;padding:0 24px;margin-top:-56px;position:relative;flex-wrap:wrap}
-.p-avatar{width:120px;height:120px;border:5px solid var(--panel);background:var(--panel-2);display:grid;place-items:center;overflow:hidden;flex-shrink:0;border-radius:50%}
+.p-id{flex:1;min-width:180px;padding-top:64px}
+.p-id h1{margin:0;font-size:1.8rem;line-height:1.15;word-break:break-word}
+.p-status{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:.85rem;color:var(--text);background:var(--panel-2);padding:3px 10px;border-radius:99px}
+.p-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.p-actions{padding-top:68px;display:flex;gap:8px;flex-wrap:wrap}
+.p-card.no-banner .p-main{margin-top:0;padding-top:24px}
+.p-card.no-banner .p-id{padding-top:14px}
+.p-card.no-banner .p-actions{padding-top:14px}
+.p-card.center .p-main{flex-direction:column;align-items:center;text-align:center}
+.p-card.center .p-id{padding-top:0;min-width:0;width:100%}
+.p-card.center .p-actions{position:absolute;right:16px;top:-148px;padding:0;z-index:3}  /* sits in the banner's corner */
+.p-card.center.no-banner .p-actions{top:16px}
+.p-card.center .p-bio{margin-left:auto;margin-right:auto;text-align:center}
+.p-card.center .tags,.p-card.center .p-meta,.p-card.center .live{justify-content:center}
+.p-bio{margin:14px 24px 0;white-space:pre-line;max-width:720px}
+.p-meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;color:var(--muted);padding:12px 24px 0}
+.p-meta b{color:var(--text)}
+.p-meta button{all:unset;cursor:pointer}
+.p-meta button:hover b{color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px 0}
+.tag{all:unset;cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:6px 10px;font-size:.85rem;display:flex;gap:6px;align-items:baseline;color:var(--text)}
+.tag:hover{border-color:var(--accent)}
+.tag small{color:var(--muted);font-size:.72rem}
+.tag .go{color:var(--accent);font-size:.75rem}
+
+/* Profile picture + frames */
+.av-wrap{position:relative;width:120px;height:120px;flex-shrink:0}
+.p-avatar{position:relative;z-index:1;width:100%;height:100%;border:5px solid var(--panel);background:var(--panel-2);display:grid;place-items:center;overflow:hidden;border-radius:50%}
 .p-avatar.shape-rounded{border-radius:calc(var(--radius) + 10px)}
 .p-avatar.shape-square{border-radius:6px}
 .p-avatar.shape-hex{border-radius:0;border:none;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%)}
 .p-avatar img{width:100%;height:100%;object-fit:cover}
 .p-avatar span{font-family:var(--font-head);font-size:2.4rem;font-weight:700;color:var(--accent)}
-.p-id{flex:1;min-width:180px;padding-top:64px}
-.p-id h1{margin:0;font-size:1.8rem;line-height:1.15;word-break:break-word}
-.p-status{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:.85rem;color:var(--text);background:var(--panel-2);padding:3px 10px;border-radius:99px}
-.p-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
-.p-actions{padding-top:68px}
-.p-bio{margin:14px 24px 0;white-space:pre-line;max-width:720px}
-.tags{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px 0}
-.tag{all:unset;cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:6px 10px;font-size:.85rem;display:flex;gap:6px;align-items:baseline}
-.tag:hover{border-color:var(--accent)}
-.tag small{color:var(--muted);font-size:.72rem}
-.p-card > :last-child{margin-bottom:22px}
-.p-sec{margin-top:26px}
+.frame-glow .p-avatar{box-shadow:0 0 0 3px var(--accent),0 0 28px color-mix(in srgb, var(--accent) 75%, transparent)}
+.frame-ring .p-avatar{border:6px solid transparent;background:linear-gradient(var(--panel-2),var(--panel-2)) padding-box,conic-gradient(#ff8fb8,#ffd36e,#7fd8d2,#b48ad8,#ff8fb8) border-box}
+.frame-pixel .p-avatar{border-radius:0;border:none;clip-path:none;box-shadow:0 -6px 0 var(--accent),0 6px 0 var(--accent),-6px 0 0 var(--accent),6px 0 0 var(--accent),0 0 0 3px var(--panel) inset}
+.deco{position:absolute;z-index:2;pointer-events:none;color:var(--accent);line-height:1;font-size:22px;animation:floaty 2.4s ease-in-out infinite;text-shadow:0 1px 4px rgba(0,0,0,.25)}
+.deco.d1{top:-8px;left:-6px}
+.deco.d2{top:8px;right:-12px;font-size:16px;animation-delay:.5s}
+.deco.d3{bottom:10px;left:-12px;font-size:14px;animation-delay:1s}
+.deco.d4{bottom:-6px;right:2px;font-size:18px;animation-delay:1.5s}
+.frame-sparkles .deco{animation:twinkle 1.8s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes twinkle{0%,100%{opacity:.35;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(20deg)}}
+.bow{position:absolute;z-index:2;top:-16px;right:-16px;width:62px;transform:rotate(16deg);pointer-events:none}
+.ear{position:absolute;z-index:0;top:-18px;width:0;height:0;border-left:24px solid transparent;border-right:24px solid transparent;border-bottom:40px solid var(--accent)}
+.ear.l{left:2px;transform:rotate(-20deg)}
+.ear.r{right:2px;transform:rotate(20deg)}
+.bow path,.bow circle{fill:var(--accent)}
+.bow .shine{fill:none;stroke:rgba(255,255,255,.65);stroke-width:2.5;stroke-linecap:round}
+.ear::after{content:"";position:absolute;left:-12px;top:12px;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:22px solid color-mix(in srgb, var(--accent) 45%, #fff)}
+
+/* Live status */
+.live{display:flex;flex-wrap:wrap;gap:8px;padding:12px 24px 0}
+.live-card{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:6px 12px 6px 8px;font-size:.85rem;max-width:100%;text-align:left}
+.live-card img{width:92px;height:43px;object-fit:cover;border-radius:6px;flex-shrink:0}
+.live-card .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#7a7f88}
+.live-card small{display:block;color:var(--muted);font-size:.72rem}
+.live-card b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.live-card div{min-width:0}
+.st-ingame .dot{background:#90ba3c} .st-ingame b{color:#90ba3c}
+.st-online .dot{background:#57cbde}
+.st-idle .dot{background:#f0b232} .st-dnd .dot{background:#f23f43}
+
+/* Profile sections */
+.p-sec{margin-top:24px}
 .p-sec h2{font-size:1.15rem;margin:0 0 12px}
 .p-stats{grid-template-columns:repeat(6,1fr)}
 .minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.mini{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:3px}
+.mini{all:unset;box-sizing:border-box;display:grid;gap:3px}
+button.mini{cursor:pointer}
 .mini-cover{aspect-ratio:3/4;border-radius:var(--radius);transition:transform .12s}
-.mini:hover .mini-cover{transform:translateY(-3px)}
+button.mini:hover .mini-cover{transform:translateY(-3px)}
 .mini-t{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ranks{display:grid;gap:8px}
-.rank-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
-.rank-row:hover{border-color:var(--accent)}
+.rank-row{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;width:100%}
+button.rank-row{cursor:pointer}
+button.rank-row:hover{border-color:var(--accent)}
 .rank-thumb{width:72px;height:44px;border-radius:calc(var(--radius) * .5);flex-shrink:0}
 .rank-thumb span{font-size:1rem}
 .rank-row > div:nth-child(2){flex:1;min-width:0}
@@ -256,6 +328,24 @@ dialog > form{display:contents}
 .rank-vals{display:flex;gap:18px;text-align:right}
 .rank-vals small{display:block;color:var(--muted);font-size:.72rem}
 .rank-vals b{font-family:var(--font-head);color:var(--accent)}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge-pill{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 5px;font-size:.86rem}
+.badge-pill i{font-style:normal;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:.95rem;flex-shrink:0}
+.badge-pill b{display:block;line-height:1.2}
+.badge-pill small{display:block;color:var(--muted);font-size:.72rem;line-height:1.2}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.person{all:unset;box-sizing:border-box;cursor:pointer;display:grid;justify-items:center;gap:3px;text-align:center;padding:12px 8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.person:hover{border-color:var(--accent)}
+.person .pa{width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--panel-2);display:grid;place-items:center;font-weight:700;color:var(--accent)}
+.person img{width:100%;height:100%;object-fit:cover}
+.person b,.person small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person b{font-size:.86rem}
+.person small{color:var(--muted);font-size:.75rem}
+.find-results{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);box-shadow:0 18px 40px rgba(0,0,0,.35);overflow:hidden}
+.find-results a{display:flex;gap:10px;align-items:center;padding:8px 10px;color:var(--text);text-decoration:none}
+.find-results a:hover{background:var(--panel-2)}
+.find-results .pa{width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel-2);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--accent);flex-shrink:0}
+.find-results img{width:100%;height:100%;object-fit:cover}
 
 /* Profile editor */
 .img-pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -265,6 +355,11 @@ dialog > form{display:contents}
 .sec-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel-2);padding:6px 6px 6px 12px;border-radius:calc(var(--radius) * .7)}
 .sec-list span{display:flex;gap:4px}
 .tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ed-group{border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:12px}
+.ed-group > h3{margin:0;font-size:.98rem}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.name-state{font-size:.8rem;margin-top:4px;min-height:1.1em}
+.name-state.ok{color:var(--c-completed)} .name-state.err{color:var(--c-dropped)}
 
 /* ---------- Customize page ---------- */
 .cz{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;padding-bottom:60px;align-items:start}
@@ -324,12 +419,17 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   .colors{grid-template-columns:repeat(2,1fr)}
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .cover span{font-size:1.5rem}
+  .pview{padding:10px;margin-top:16px}
   .p-banner{height:150px}
-  .p-avatar{width:96px;height:96px}
+  .av-wrap{width:96px;height:96px}
   .p-main{padding:0 16px;margin-top:-48px}
   .p-id{flex-basis:100%;padding-top:0}
   .p-actions{position:absolute;right:16px;top:60px;padding:0}
-  .p-bio,.tags{margin-left:16px;margin-right:16px;padding-left:0;padding-right:0}
+  .p-card.center .p-actions{top:-90px;right:12px}
+  .p-card.no-banner .p-actions,.p-card.center.no-banner .p-actions{position:static;padding:0 0 4px}
+  .p-bio{margin-left:16px;margin-right:16px}
+  .tags,.live,.p-meta{padding-left:16px;padding-right:16px}
+  .checks{grid-template-columns:1fr}
   .rank-row{gap:10px;padding:10px}
   .rank-thumb{width:52px;height:36px}
   .rank-vals{gap:10px}
@@ -377,7 +477,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   </section>
 
   <!-- PROFILE (filled in by the script) -->
-  <section id="view-profile" hidden></section>
+  <section id="view-profile" hidden><div id="pTop"></div><div id="pBody"></div></section>
 
   <!-- CUSTOMIZE -->
   <section id="view-customize" hidden>
@@ -653,67 +753,162 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
       <button type="button" class="x" data-close aria-label="Close">×</button>
     </div>
     <div class="dlg-body">
-      <div class="row">
-        <div><label for="pName">Display name</label><input type="text" id="pName" maxlength="40"></div>
-        <div><label for="pHandle">Handle</label><input type="text" id="pHandle" maxlength="30" placeholder="without the @"></div>
-      </div>
-      <div><label for="pStatus">Status line</label><input type="text" id="pStatus" maxlength="60" placeholder="e.g. Grinding ranked this week"></div>
-      <div><label for="pBio">Bio</label><textarea id="pBio" rows="3" maxlength="400" placeholder="Tell people what you play…"></textarea></div>
 
-      <div class="row">
-        <div>
-          <label>Profile picture</label>
-          <div class="img-pick">
-            <div class="img-prev" id="pAvatarPrev"></div>
-            <button type="button" class="btn small" id="pAvatarBtn">Upload</button>
-            <button type="button" class="btn small" id="pAvatarDel">Remove</button>
-            <input type="file" id="pAvatarFile" accept="image/*" hidden>
+      <div class="ed-group">
+        <h3>About you</h3>
+        <div class="row">
+          <div><label for="pName">Display name</label><input type="text" id="pName" maxlength="40"></div>
+          <div id="pHandleBox"><label for="pHandle">Handle</label><input type="text" id="pHandle" maxlength="30" placeholder="without the @"></div>
+          <div id="pUsernameBox" hidden>
+            <label for="pUsername">Username <span class="hint">(your link: …/#u/<b id="pUserPreview">name</b>)</span></label>
+            <input type="text" id="pUsername" maxlength="20" autocapitalize="off" spellcheck="false">
+            <div class="name-state" id="pUserState"></div>
           </div>
         </div>
-        <div>
-          <label for="pShape">Picture shape</label>
-          <select id="pShape">
-            <option value="circle">Circle</option>
-            <option value="rounded">Rounded</option>
-            <option value="square">Square</option>
-            <option value="hex">Hexagon</option>
-          </select>
-        </div>
+        <div><label for="pStatus">Status line</label><input type="text" id="pStatus" maxlength="60" placeholder="e.g. Grinding ranked this week"></div>
+        <div><label for="pBio">Bio</label><textarea id="pBio" rows="3" maxlength="400" placeholder="Tell people what you play…"></textarea></div>
       </div>
-      <div class="row">
-        <div>
-          <label>Banner image</label>
-          <div class="img-pick">
-            <div class="img-prev wide" id="pBannerPrev"></div>
-            <button type="button" class="btn small" id="pBannerBtn">Upload</button>
-            <button type="button" class="btn small" id="pBannerDel">Remove</button>
-            <input type="file" id="pBannerFile" accept="image/*" hidden>
+
+      <div class="ed-group">
+        <h3>Look</h3>
+        <div class="row">
+          <div>
+            <label>Profile picture</label>
+            <div class="img-pick">
+              <div class="img-prev" id="pAvatarPrev"></div>
+              <button type="button" class="btn small" id="pAvatarBtn">Upload</button>
+              <button type="button" class="btn small" id="pAvatarDel">Remove</button>
+              <input type="file" id="pAvatarFile" accept="image/*" hidden>
+            </div>
+          </div>
+          <div>
+            <label>Banner image</label>
+            <div class="img-pick">
+              <div class="img-prev wide" id="pBannerPrev"></div>
+              <button type="button" class="btn small" id="pBannerBtn">Upload</button>
+              <button type="button" class="btn small" id="pBannerDel">Remove</button>
+              <input type="file" id="pBannerFile" accept="image/*" hidden>
+            </div>
           </div>
         </div>
-        <div>
-          <label for="pBannerStyle">Banner style</label>
-          <select id="pBannerStyle">
-            <option value="gradient">Accent gradient</option>
-            <option value="solid">Solid accent</option>
-            <option value="image">My image</option>
-          </select>
+        <div class="row">
+          <div>
+            <label for="pShape">Picture shape</label>
+            <select id="pShape">
+              <option value="circle">Circle</option><option value="rounded">Rounded</option>
+              <option value="square">Square</option><option value="hex">Hexagon</option>
+            </select>
+          </div>
+          <div>
+            <label for="pFrame">Picture frame</label>
+            <select id="pFrame"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="pAvatarPos">Picture position</label>
+            <select id="pAvatarPos"><option value="left">Left</option><option value="center">Center</option></select>
+          </div>
+          <div>
+            <label for="pBannerStyle">Banner</label>
+            <select id="pBannerStyle">
+              <option value="gradient">Accent gradient</option>
+              <option value="solid">Solid accent</option>
+              <option value="image">My image</option>
+              <option value="none">No banner</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div>
-        <h3 style="margin:0 0 8px;font-size:1rem">Gamer tags</h3>
+      <div class="ed-group">
+        <h3>Profile theme</h3>
+        <p class="hint">This is what everyone sees when they visit your profile, no matter what theme they use.</p>
+        <div class="row">
+          <div>
+            <label for="ptMode">Colors</label>
+            <select id="ptMode"><option value="app">Same as my app theme</option><option value="custom">Custom profile colors</option></select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="button" class="btn" id="ptMatch" style="width:100%;justify-content:center">✨ Match my profile picture</button>
+          </div>
+        </div>
+        <div id="ptCustom" style="display:grid;gap:12px">
+          <div class="colors">
+            <div><label for="ptBg">Background</label><input type="color" id="ptBg"></div>
+            <div><label for="ptPanel">Panels</label><input type="color" id="ptPanel"></div>
+            <div><label for="ptText">Text</label><input type="color" id="ptText"></div>
+            <div><label for="ptAccent">Accent</label><input type="color" id="ptAccent"></div>
+          </div>
+          <div class="row3" style="grid-template-columns:1fr 1fr 1fr">
+            <div><label for="ptHead">Heading font</label><select id="ptHead"></select></div>
+            <div><label for="ptBody">Body font</label><select id="ptBody"></select></div>
+            <div><label for="ptEffect">Background</label>
+              <select id="ptEffect"><option value="solid">Solid</option><option value="glow">Accent glow</option><option value="aurora">Aurora</option><option value="grid">Grid</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed-group">
+        <h3>Gamer tags</h3>
+        <p class="hint">Steam, Xbox, PlayStation, Riot and Discord tags become links to your profile on that site. Others can be copied with one click. You can also paste a full profile link.</p>
         <div class="tag-grid" id="pTags"></div>
+        <div>
+          <label for="pDiscordId">Discord user ID <span class="hint">(optional, for live status)</span></label>
+          <input type="text" id="pDiscordId" maxlength="22" inputmode="numeric" placeholder="e.g. 94490510688792576">
+          <p class="hint" style="margin-top:6px">To show your Discord status and game, join the free <a href="https://discord.gg/lanyard" target="_blank" rel="noopener">Lanyard server</a>, then paste your user ID (Discord → Settings → Advanced → Developer Mode, then right-click your name → Copy User ID).</p>
+        </div>
       </div>
 
-      <div>
-        <h3 style="margin:0 0 4px;font-size:1rem">Profile sections</h3>
-        <p class="hint" style="margin-bottom:8px">Turn sections on or off and change their order. Favorites are picked with the ☆ button on any game.</p>
+      <div class="ed-group">
+        <h3>Privacy</h3>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="pvLive"> Show what I'm playing (live)</label>
+          <label class="check"><input type="checkbox" id="pvFollowers"> Show follower counts</label>
+          <label class="check"><input type="checkbox" id="pvFriends"> Show my friends list</label>
+          <label class="check"><input type="checkbox" id="pvJoined"> Show when I joined</label>
+        </div>
+      </div>
+
+      <div class="ed-group">
+        <h3>Profile sections</h3>
+        <p class="hint">Turn sections on or off and change their order. Favorites are picked with the ☆ button on any game.</p>
         <ul class="sec-list" id="pSections"></ul>
       </div>
     </div>
     <div class="dlg-foot">
       <button type="button" class="btn" data-close>Cancel</button>
-      <button type="submit" class="btn primary">Save profile</button>
+      <button type="submit" class="btn primary" id="pSave">Save profile</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Pop-up: list of people (followers, following, friends) -->
+<dialog id="peopleDlg">
+  <div class="dlg-head">
+    <h2 id="peopleTitle">Followers</h2>
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+  </div>
+  <div class="dlg-body"><div class="people" id="peopleList"></div></div>
+</dialog>
+
+<!-- Pop-up: pick a username -->
+<dialog id="usernameDlg">
+  <form id="usernameForm" autocomplete="off">
+    <div class="dlg-head"><h2>Pick your username ♡</h2></div>
+    <div class="dlg-body">
+      <p style="margin:0">Your username is how friends find you, and it's your profile link. Only one person can have each name.</p>
+      <div>
+        <label for="unInput">Username</label>
+        <input type="text" id="unInput" maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. aegyoer">
+        <div class="name-state" id="unState"></div>
+      </div>
+      <p class="hint">3–20 characters: lowercase letters, numbers and _ . You can change it later.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" id="unLater">Later</button>
+      <button type="submit" class="btn primary" id="unSave">Save username</button>
     </div>
   </form>
 </dialog>
@@ -737,8 +932,8 @@ const SITE_NAME = 'Checkpoint';
 
 // Accounts (optional). Paste your Supabase "Project URL" and
 // "Publishable key" here to turn on Sign in. Leave empty to turn it off.
-const SUPABASE_URL = '';
-const SUPABASE_KEY = '';
+const SUPABASE_URL = 'https://hrckaoqgybpzooextjjq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_gA25tLjB7fp0ZTuBzBKs4Q_ldTEirlN';
 
 // Your GitHub repo, used for the "Report a bug" and "Request a feature" links
 const GITHUB_REPO = 'aegyoer/checkpoint';
@@ -747,7 +942,10 @@ const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Complete
 const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', retired:'Retired' };
 const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
 const GAMER_TAGS = [['steam','Steam'],['riot','Riot ID'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
-const SECTION_LABELS = { stats:'Stats', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips' };
+const SECTION_LABELS = { badges:'Badges', stats:'Stats', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', friends:'Friends' };
+const FRAMES = { none:'None', glow:'Glow', ring:'Rainbow ring', hearts:'Floating hearts', sparkles:'Sparkles', bow:'Ribbon bow', catears:'Cat ears', pixel:'Pixel' };
+// Usernames that get the "Creator" badge
+const CREATORS = ['aegyoer'];
 // Game-database tags that mean "this is probably a PvP game"
 const PVP_TAGS = ['pvp','online-pvp','competitive','esports','battle-royale','moba','team-based','hero-shooter'];
 
@@ -783,8 +981,11 @@ delete DEFAULT_THEME.name;
 const DEFAULT_PROFILE = {
   name:'Player One', handle:'', status:'', bio:'',
   avatar:'', banner:'', bannerStyle:'gradient', avatarShape:'circle',
+  avatarPos:'left', frame:'none', discordId:'',
   tags:{}, favorites:[],
-  sections:[{key:'stats',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true}]
+  pTheme:{ mode:'app', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#ff8fb8', headFont:'grotesk', bodyFont:'inter', bgEffect:'glow' },
+  privacy:{ live:true, followers:true, friends:true, joined:true },
+  sections:[{key:'badges',on:true},{key:'stats',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true},{key:'friends',on:true}]
 };
 
 const KEYS = { games:'checkpoint-data-v1', profile:'checkpoint-profile-v1', theme:'checkpoint-theme-v1' };
@@ -884,8 +1085,24 @@ function normalizeProfile(p){
   out.sections = [...given.map(s => ({ key:s.key, on:!!s.on })), ...missing.map(s => ({ ...s }))];
   const okImg = v => (typeof v === 'string' && v.startsWith('data:image/')) ? v : safeUrl(v);
   out.avatar = okImg(p.avatar); out.banner = okImg(p.banner);
-  if (!['gradient','solid','image'].includes(out.bannerStyle)) out.bannerStyle = 'gradient';
+  if (!['gradient','solid','image','none'].includes(out.bannerStyle)) out.bannerStyle = 'gradient';
   if (!['circle','rounded','square','hex'].includes(out.avatarShape)) out.avatarShape = 'circle';
+  if (!['left','center'].includes(out.avatarPos)) out.avatarPos = 'left';
+  if (!FRAMES[out.frame]) out.frame = 'none';
+  out.discordId = /^\d{15,22}$/.test(String(p.discordId || '')) ? String(p.discordId) : '';
+  out.pTheme = normalizePTheme(p.pTheme);
+  const pv = (p.privacy && typeof p.privacy === 'object') ? p.privacy : {};
+  out.privacy = {}; for (const k of Object.keys(DEFAULT_PROFILE.privacy)) out.privacy[k] = pv[k] !== false;
+  for (const k of Object.keys(out.tags)) out.tags[k] = String(out.tags[k]).slice(0, 120);
+  return out;
+}
+function normalizePTheme(t){
+  const d = DEFAULT_PROFILE.pTheme, out = { ...d, ...(t && typeof t === 'object' ? t : {}) };
+  if (!['app','custom'].includes(out.mode)) out.mode = 'app';
+  for (const k of ['bg','panel','text','accent']) if (!isHex(out[k])) out[k] = d[k];
+  if (!FONTS[out.headFont]) out.headFont = d.headFont;
+  if (!BODY_FONTS.includes(out.bodyFont)) out.bodyFont = d.bodyFont;
+  if (!['solid','glow','aurora','grid'].includes(out.bgEffect)) out.bgEffect = d.bgEffect;
   return out;
 }
 function normalizeTheme(t){
@@ -942,7 +1159,12 @@ let filter = 'all', search = '', sortBy = 'recent';
 
 function route(){
   const wanted = location.hash.slice(1);
-  const next = VIEWS.includes(wanted) ? wanted : 'library';
+  let next = VIEWS.includes(wanted) ? wanted : 'library';
+  if (wanted.startsWith('u/')){                       // someone's public profile: #u/username
+    next = 'user';
+    viewedUser = null;                                // always load the latest version
+    try { viewedName = cleanName(decodeURIComponent(wanted.slice(2))); } catch(e){ viewedName = cleanName(wanted.slice(2)); }
+  }
   if (next !== view){ filter = 'all'; search = ''; $('search').value = ''; }
   view = next;
   document.querySelectorAll('.tabs a').forEach(a => {
@@ -951,7 +1173,7 @@ function route(){
     on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current');
   });
   $('view-games').hidden = !(view === 'library' || view === 'pvp');
-  $('view-profile').hidden = view !== 'profile';
+  $('view-profile').hidden = !(view === 'profile' || view === 'user');
   $('view-customize').hidden = view !== 'customize';
   render();
 }
@@ -961,6 +1183,7 @@ window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); })
 function render(){
   if (view === 'library' || view === 'pvp') renderGamesView();
   else if (view === 'profile') renderProfile();
+  else if (view === 'user') renderUserPage();
   else if (view === 'customize') syncCustomize();
 }
 
@@ -1371,12 +1594,23 @@ function showClip(gameId, clipId){
   const g = findGame(gameId); if (!g) return;
   const c = g.clips.find(x => x.id === clipId); if (!c) return;
   openClip = { gameId, clipId };
+  $('cDelete').hidden = false;
   $('cTitle').textContent = c.title || g.title;
   $('cPlayer').innerHTML = playerHTML(parseClip(c.url), c.url);
   $('cLink').href = c.url;
   clipDlg.showModal();
 }
-clipDlg.addEventListener('close', () => { $('cPlayer').innerHTML = ''; });   // stops the video
+clipDlg.addEventListener('close', () => { $('cPlayer').innerHTML = ''; });
+// Play a clip from a profile (no remove button)
+function showClipUrl(url, title){
+  url = safeUrl(url); if (!url) return;
+  openClip = null;
+  $('cTitle').textContent = title || 'Clip';
+  $('cPlayer').innerHTML = playerHTML(parseClip(url), url);
+  $('cLink').href = url;
+  $('cDelete').hidden = true;
+  clipDlg.showModal();
+}   // stops the video
 $('cDelete').addEventListener('click', () => {
   if (!openClip || !confirm('Remove this clip?')) return;
   const g = findGame(openClip.gameId);
@@ -1398,104 +1632,664 @@ $('clipForm').addEventListener('submit', e => {
 
 /* ================================================================
    9. PROFILE PAGE
+   Your profile is turned into a "snapshot" (only the parts you chose
+   to show). That snapshot is what other people see at #u/username,
+   in YOUR profile theme.
    ================================================================ */
-function miniHTML(g){
-  return `<button class="mini" data-open="${esc(g.id)}">
-    ${coverHTML(g, 'mini-cover', '', true)}
-    <div class="mini-t">${esc(g.title)}</div>
-    <div class="meta">${esc(statusMap(g)[g.status])}</div>
-  </button>`;
+let myRow = null;          // your public profile record: { username, joined_at }
+let viewedName = '';       // username in the address (#u/name)
+let viewedUser = null;     // the profile being looked at
+let socialCache = {};      // followers / following / friends per person
+let liveCache = {};        // Steam / Discord status
+let currentMeta = null;    // who the profile on screen belongs to
+let previewSnap = null;    // used while editing so you see changes live
+
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const RESERVED = ['admin','checkpoint','support','help','api','me','settings','profile','login','signup','mod','staff','official'];
+const cleanName = v => String(v || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+const inkFor = hex => luminance(hex) > 0.6 ? '#0b0d10' : '#ffffff';
+const profileLink = name => `${location.origin}${location.pathname}#u/${name}`;
+
+const BADGES = [
+  ['creator','♛','Creator','Made Checkpoint',              (s, m) => CREATORS.includes(m.username)],
+  ['early','✿','Early bird','Joined in 2026',              (s, m, p) => !!m.joined && (m.isMe || p.privacy.joined) && new Date(m.joined).getFullYear() <= 2026],
+  ['first','♡','First save','Added a first game',          s => s.games >= 1],
+  ['collector','✦','Collector','25+ games tracked',        s => s.games >= 25],
+  ['curator','❖','Curator','100+ games tracked',           s => s.games >= 100],
+  ['finisher','★','Finisher','Completed 10 games',         s => s.completed >= 10],
+  ['perfect','✧','Perfectionist','100% on a 10+ item checklist', s => s.perfect >= 1],
+  ['grinder','⚔','Grinder','500+ hours played',            s => s.hours >= 500],
+  ['ranked','♜','Ranked','Logged a PvP rank',              s => !!s.ranked],
+  ['clipper','▶','Highlight reel','Shared 5+ clips',       s => s.clips >= 5],
+  ['social','☺','Social butterfly','5+ friends',           (s, m) => !!m.counts && m.counts.friends >= 5]
+];
+
+/* ---------- Building the public snapshot ---------- */
+function profileTheme(p){
+  if (p.pTheme.mode === 'custom') return { ...p.pTheme };
+  return { mode:'app', bg:theme.bg, panel:theme.panel, text:theme.text, accent:theme.accent,
+           headFont:theme.headFont, bodyFont:theme.bodyFont, bgEffect:theme.bgEffect };
+}
+const miniData = g => ({ id:g.id, title:g.title, cover:g.cover, status:statusMap(g)[g.status] });
+
+function buildSnapshot(p = profile){
+  const story = games.filter(g => g.type === 'story'), pvp = games.filter(g => g.type === 'pvp');
+  const on = k => p.sections.some(s => s.key === k && s.on);
+  const completed = story.filter(g => g.status === 'completed').length;
+  const finishable = story.filter(g => g.status !== 'wishlist').length;
+  return {
+    v:1, name:p.name, handle:p.handle, status:p.status, bio:p.bio,
+    avatar:p.avatar, banner: p.bannerStyle === 'image' ? p.banner : '',
+    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, frame:p.frame,
+    tags:p.tags, discordId:p.discordId, privacy:p.privacy, sections:p.sections, theme:profileTheme(p),
+    stats:{
+      games:games.length, completed, rate: finishable ? Math.round(completed / finishable * 100) : null,
+      hours:Math.round(games.reduce((s, g) => s + g.hours, 0)),
+      items:story.reduce((s, g) => s + g.checklist.filter(i => i.done).length, 0),
+      pvp:pvp.length,
+      perfect:story.filter(g => g.checklist.length >= 10 && g.checklist.every(i => i.done)).length,
+      ranked:pvp.some(g => g.rank), clips:games.reduce((s, g) => s + g.clips.length, 0)
+    },
+    playing: on('playing') ? games.filter(g => g.status === 'playing' || g.status === 'main').slice(0, 12).map(miniData) : [],
+    favorites: on('favorites') ? p.favorites.map(findGame).filter(Boolean).map(miniData) : [],
+    ranks: on('ranks') ? pvp.filter(g => g.rank || g.peakRank || g.main).slice(0, 12).map(g => ({ ...miniData(g), rank:g.rank, peak:g.peakRank, main:g.main })) : [],
+    clips: on('clips') ? games.flatMap(g => g.clips.map(c => ({ url:c.url, title:c.title, added:c.added, game:g.title, cover:g.cover })))
+                              .sort((a, b) => b.added - a.added).slice(0, 6) : []
+  };
 }
 
-function profileSection(key){
-  const story = games.filter(g => g.type === 'story');
-  const pvp = games.filter(g => g.type === 'pvp');
+// Clean up a snapshot that came from someone else (never trust it blindly)
+function normalizeSnap(d){
+  d = d && typeof d === 'object' ? d : {};
+  const base = normalizeProfile({ ...d, pTheme:{ ...(d.theme || {}), mode:'custom' } });
+  const str = (v, n) => String(v ?? '').slice(0, n);
+  const list = (a, n) => Array.isArray(a) ? a.filter(x => x && typeof x === 'object').slice(0, n) : [];
+  const mini = m => ({ id:'', title:str(m.title, 120), cover:safeUrl(m.cover), status:str(m.status, 30) });
+  const st = d.stats && typeof d.stats === 'object' ? d.stats : {};
+  const num = v => Math.max(0, Number(v) || 0);
+  return {
+    ...base, banner: base.bannerStyle === 'image' ? base.banner : '',
+    theme: base.pTheme,
+    stats:{ games:num(st.games), completed:num(st.completed), rate: st.rate == null ? null : Math.min(100, num(st.rate)),
+            hours:num(st.hours), items:num(st.items), pvp:num(st.pvp), perfect:num(st.perfect), ranked:!!st.ranked, clips:num(st.clips) },
+    playing:list(d.playing, 12).map(mini), favorites:list(d.favorites, 6).map(mini),
+    ranks:list(d.ranks, 12).map(r => ({ ...mini(r), rank:str(r.rank, 40), peak:str(r.peak, 40), main:str(r.main, 60) })),
+    clips:list(d.clips, 6).filter(c => safeUrl(c.url)).map(c => ({ url:safeUrl(c.url), title:str(c.title, 80), game:str(c.game, 120), cover:safeUrl(c.cover), added:num(c.added) }))
+  };
+}
+
+/* ---------- Gamer tag links ---------- */
+function steamIdFrom(v){
+  const m = String(v || '').match(/steamcommunity\.com\/(?:id|profiles)\/([^/?#]+)/i);
+  return (m ? m[1] : String(v || '')).trim();
+}
+function tagLink(key, value, discordId){
+  const v = String(value).trim(), e = encodeURIComponent;
+  const url = safeUrl(v);
+  if (url) return url;
+  if (key === 'steam'){ const id = steamIdFrom(v); return /^\d{17}$/.test(id) ? `https://steamcommunity.com/profiles/${id}` : `https://steamcommunity.com/id/${e(id)}`; }
+  if (key === 'xbox') return `https://www.xbox.com/play/user/${e(v)}`;
+  if (key === 'psn') return `https://psnprofiles.com/${e(v)}`;
+  if (key === 'riot' && v.includes('#')) return `https://tracker.gg/valorant/profile/riot/${e(v)}/overview`;
+  if (key === 'discord' && discordId) return `https://discord.com/users/${discordId}`;
+  return '';
+}
+function tagText(key, value){
+  const v = String(value).trim();
+  if (!safeUrl(v)) return v;
+  if (key === 'steam') return steamIdFrom(v);
+  try { const u = new URL(v); return u.hostname.replace(/^www\./, '') + u.pathname.replace(/\/$/, ''); } catch(e){ return v; }
+}
+
+/* ---------- Drawing a profile ---------- */
+function profileStyle(t){
+  return `--bg:${t.bg};--panel:${t.panel};--text:${t.text};--accent:${t.accent};--accent-ink:${inkFor(t.accent)};` +
+         `--font-head:${FONTS[t.headFont][1]};--font-body:${FONTS[t.bodyFont][1]};color-scheme:${luminance(t.bg) > .5 ? 'light' : 'dark'}`;
+}
+function avatarHTML(s){
+  const pic = s.avatar ? `<img src="${esc(s.avatar)}" alt="">` : `<span>${esc(initials(s.name || 'P'))}</span>`;
+  const decos = {
+    hearts:   ['♥','♥','♥','♥'],
+    sparkles: ['✦','✧','✦','✧']
+  }[s.frame];
+  const deco = decos ? decos.map((c, i) => `<b class="deco d${i + 1}">${c}</b>`).join('') : '';
+  const bow = s.frame === 'bow' ? `<svg class="bow" viewBox="0 0 64 40" aria-hidden="true">
+      <path d="M32 20 L5 5 Q-2 20 5 35 Z"/><path d="M32 20 L59 5 Q66 20 59 35 Z"/>
+      <path d="M30 20 L20 40 L27 39 Z M34 20 L44 40 L37 39 Z" opacity=".85"/>
+      <circle cx="32" cy="20" r="6.5"/><path class="shine" d="M10 12 Q8 20 11 27"/></svg>` : '';
+  const ears = s.frame === 'catears' ? '<i class="ear l"></i><i class="ear r"></i>' : '';
+  return `<div class="av-wrap frame-${s.frame}">${ears}<div class="p-avatar shape-${s.avatarShape}">${pic}</div>${deco}${bow}</div>`;
+}
+function miniCardHTML(m, isMe){
+  const g = { title:m.title, cover:m.cover };
+  const inner = `${coverHTML(g, 'mini-cover', '', true)}<div class="mini-t">${esc(m.title)}</div><div class="meta">${esc(m.status)}</div>`;
+  return isMe && m.id ? `<button class="mini" data-open="${esc(m.id)}">${inner}</button>` : `<div class="mini">${inner}</div>`;
+}
+function clipCardHTML(c){
+  const info = parseClip(c.url);
+  const img = info.kind === 'youtube'
+    ? `<img src="https://img.youtube.com/vi/${info.id}/hqdefault.jpg" alt="" loading="lazy">`
+    : (c.cover ? `<img src="${esc(sized(c.cover, 420))}" data-full="${esc(c.cover)}" alt="" loading="lazy">` : '');
+  return `<button class="clip" data-clip-url="${esc(c.url)}" data-clip-title="${esc(c.title || c.game)}">
+    <div class="clip-thumb" style="--h:${hueFor(c.game || 'clip')}">${img}<span class="play">▶</span><em class="src">${esc(info.label)}</em></div>
+    <div class="clip-title">${esc(c.title || 'Untitled clip')}</div><div class="meta">${esc(c.game)}</div>
+  </button>`;
+}
+function personHTML(p){
+  const pic = p.avatar && (String(p.avatar).startsWith('data:image/') || safeUrl(p.avatar))
+    ? `<img src="${esc(p.avatar)}" alt="">` : esc(initials(p.name || p.username));
+  return `<a class="person" href="#u/${esc(p.username)}"><span class="pa">${pic}</span><b>${esc(p.name || p.username)}</b><small>@${esc(p.username)}</small></a>`;
+}
+
+function sectionHTML(key, s, m){
+  const priv = k => m.isMe || s.privacy[k];
+  if (key === 'badges'){
+    const earned = BADGES.filter(b => b[4](s.stats, m, s));
+    return earned.length ? `<div class="badges">${earned.map(([, icon, name, desc]) =>
+      `<div class="badge-pill" title="${esc(desc)}"><i>${icon}</i><div><b>${esc(name)}</b><small>${esc(desc)}</small></div></div>`).join('')}</div>` : '';
+  }
   if (key === 'stats'){
-    const completed = story.filter(g => g.status === 'completed').length;
-    const finishable = story.filter(g => g.status !== 'wishlist').length;
-    const items = [
-      ['Games', games.length],
-      ['Completed', completed],
-      ['Completion rate', finishable ? Math.round(completed / finishable * 100) + '%' : '—'],
-      ['Hours played', Math.round(games.reduce((s, g) => s + g.hours, 0))],
-      ['Checklist items', story.reduce((s, g) => s + g.checklist.filter(i => i.done).length, 0)],
-      ['PvP games', pvp.length]
-    ];
+    const st = s.stats;
+    const items = [['Games', st.games], ['Completed', st.completed], ['Completion rate', st.rate == null ? '—' : st.rate + '%'],
+                   ['Hours played', st.hours], ['Checklist items', st.items], ['PvP games', st.pvp]];
     return `<div class="stats p-stats">${items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
   }
-  if (key === 'playing'){
-    const list = games.filter(g => g.status === 'playing' || g.status === 'main');
-    return list.length ? `<div class="minis">${list.map(miniHTML).join('')}</div>` : '';
-  }
-  if (key === 'favorites'){
-    const list = profile.favorites.map(findGame).filter(Boolean);
-    return list.length ? `<div class="minis">${list.map(miniHTML).join('')}</div>` : '';
-  }
+  if (key === 'playing')   return s.playing.length ? `<div class="minis">${s.playing.map(x => miniCardHTML(x, m.isMe)).join('')}</div>` : '';
+  if (key === 'favorites') return s.favorites.length ? `<div class="minis">${s.favorites.map(x => miniCardHTML(x, m.isMe)).join('')}</div>` : '';
   if (key === 'ranks'){
-    const list = pvp.filter(g => g.rank || g.peakRank || g.main);
-    return list.length ? `<div class="ranks">${list.map(g => `
-      <button class="rank-row" data-open="${esc(g.id)}">
-        ${coverHTML(g, 'rank-thumb', '', true)}
-        <div><b>${esc(g.title)}</b><span class="meta">${g.main ? 'Main: ' + esc(g.main) : esc(PVP_STATUS[g.status])}</span></div>
-        <div class="rank-vals">
-          <div><small>Current</small><b>${esc(g.rank || '—')}</b></div>
-          <div><small>Peak</small><b>${esc(g.peakRank || '—')}</b></div>
-        </div>
-      </button>`).join('')}</div>` : '';
+    return s.ranks.length ? `<div class="ranks">${s.ranks.map(r => {
+      const tag = m.isMe && r.id ? 'button' : 'div';
+      return `<${tag} class="rank-row" ${tag === 'button' ? `data-open="${esc(r.id)}"` : ''}>
+        ${coverHTML({ title:r.title, cover:r.cover }, 'rank-thumb', '', true)}
+        <div><b>${esc(r.title)}</b><span class="meta">${r.main ? 'Main: ' + esc(r.main) : esc(r.status)}</span></div>
+        <div class="rank-vals"><div><small>Current</small><b>${esc(r.rank || '—')}</b></div><div><small>Peak</small><b>${esc(r.peak || '—')}</b></div></div>
+      </${tag}>`; }).join('')}</div>` : '';
   }
-  if (key === 'clips'){
-    const all = games.flatMap(g => g.clips.map(c => ({ c, g }))).sort((a, b) => b.c.added - a.c.added).slice(0, 6);
-    return all.length ? `<div class="clips">${all.map(({ c, g }) => clipHTML(c, g, true)).join('')}</div>` : '';
+  if (key === 'clips') return s.clips.length ? `<div class="clips">${s.clips.map(clipCardHTML).join('')}</div>` : '';
+  if (key === 'friends'){
+    if (!priv('friends') || !m.friends || !m.friends.length) return '';
+    return `<div class="people">${m.friends.map(personHTML).join('')}</div>`;
   }
   return '';
 }
 
-function renderProfile(){
-  const p = profile;
-  const banner = p.bannerStyle === 'image' && p.banner ? `<img src="${esc(p.banner)}" alt="">` : '';
-  const avatar = p.avatar ? `<img src="${esc(p.avatar)}" alt="">` : `<span>${esc(initials(p.name || 'P'))}</span>`;
-  const tags = GAMER_TAGS.filter(([k]) => p.tags[k]).map(([k, label]) =>
-    `<button class="tag" data-copy="${esc(p.tags[k])}" title="Click to copy"><small>${label}</small>${esc(p.tags[k])}</button>`).join('');
-  const sections = p.sections.filter(s => s.on).map(s => {
-    const body = profileSection(s.key);
-    return body ? `<section class="p-sec"><h2>${SECTION_LABELS[s.key]}</h2>${body}</section>` : '';
+function profileHTML(s, m){
+  const t = s.theme;
+  const banner = s.bannerStyle === 'none' ? '' :
+    `<div class="p-banner b-${s.bannerStyle}">${s.bannerStyle === 'image' && s.banner ? `<img src="${esc(s.banner)}" alt="">` : ''}</div>`;
+  const handle = m.username ? '@' + m.username : (s.handle ? '@' + s.handle : '');
+
+  let actions = '';
+  if (m.isMe){
+    actions = `<button class="btn" data-action="edit-profile">Edit profile</button>`;
+    if (m.username) actions += `<button class="btn" data-copy-link="${esc(m.username)}" title="Copy profile link">🔗</button>`;
+  } else {
+    const st = m.followState;
+    const label = st === 'friends' ? '♡ Friends' : st === 'following' ? '✓ Following' : st === 'followsYou' ? 'Follow back' : 'Follow';
+    actions = `<button class="btn ${st === 'friends' || st === 'following' ? '' : 'primary'}" data-follow="${esc(m.id)}">${label}</button>
+               <button class="btn" data-copy-link="${esc(m.username)}" title="Copy profile link">🔗</button>`;
+  }
+
+  const meta = [];
+  if (m.joined && (m.isMe || s.privacy.joined))
+    meta.push(`<span>✿ Joined ${new Date(m.joined).toLocaleDateString([], { month:'long', year:'numeric' })}</span>`);
+  if (m.id && (m.isMe || s.privacy.followers)){
+    const c = m.counts;
+    const n = k => c ? c[k] : '…';
+    meta.push(`<button data-people="followers"><b>${n('followers')}</b> followers</button>`);
+    meta.push(`<button data-people="following"><b>${n('following')}</b> following</button>`);
+    if (m.isMe || s.privacy.friends) meta.push(`<button data-people="friends"><b>${n('friends')}</b> friends</button>`);
+  }
+
+  const tags = GAMER_TAGS.filter(([k]) => s.tags[k]).map(([k, label]) => {
+    const link = tagLink(k, s.tags[k], s.discordId);
+    const text = esc(tagText(k, s.tags[k]));
+    return link
+      ? `<a class="tag" href="${esc(link)}" target="_blank" rel="noopener"><small>${label}</small>${text}<span class="go">↗</span></a>`
+      : `<button class="tag" data-copy="${esc(s.tags[k])}" title="Click to copy"><small>${label}</small>${text}</button>`;
   }).join('');
 
-  $('view-profile').innerHTML = `
-    <div class="p-card">
-      <div class="p-banner b-${p.bannerStyle}">${banner}</div>
+  const sections = s.sections.filter(x => x.on).map(x => {
+    const body = sectionHTML(x.key, s, m);
+    return body ? `<section class="p-sec"><h2>${SECTION_LABELS[x.key]}</h2>${body}</section>` : '';
+  }).join('');
+
+  const cls = ['p-card', s.bannerStyle === 'none' ? 'no-banner' : '', s.avatarPos === 'center' ? 'center' : ''].join(' ');
+  return `<div class="pview" style="${esc(profileStyle(t))}" data-bg="${esc(t.bgEffect)}" data-head="${esc(t.headFont)}">
+    <div class="${cls}">
+      ${banner}
       <div class="p-main">
-        <div class="p-avatar shape-${p.avatarShape}">${avatar}</div>
+        ${avatarHTML(s)}
         <div class="p-id">
-          <h1>${esc(p.name || 'Player')}</h1>
-          ${p.handle ? `<div class="meta">@${esc(p.handle)}</div>` : ''}
-          ${p.status ? `<div class="p-status">${esc(p.status)}</div>` : ''}
+          <h1>${esc(s.name || 'Player')}</h1>
+          ${handle ? `<div class="meta">${esc(handle)}</div>` : ''}
+          ${s.status ? `<div class="p-status">${esc(s.status)}</div>` : ''}
         </div>
-        <div class="p-actions"><button class="btn" data-action="edit-profile">Edit profile</button></div>
+        <div class="p-actions">${actions}</div>
       </div>
-      ${p.bio ? `<p class="p-bio">${esc(p.bio)}</p>` : ''}
-      ${tags ? `<div class="tags">${tags}</div>` : '<div></div>'}
+      <div class="live" id="liveBox"></div>
+      ${meta.length ? `<div class="p-meta">${meta.join('')}</div>` : ''}
+      ${s.bio ? `<p class="p-bio">${esc(s.bio)}</p>` : ''}
+      ${tags ? `<div class="tags">${tags}</div>` : ''}
     </div>
-    ${sections || `<div class="empty" style="margin-top:24px"><p>Add some games and your profile will fill up with stats, favorites, ranks and clips.</p></div>`}
-    <div style="height:60px"></div>`;
+    ${sections || (m.isMe ? `<div class="empty" style="margin-top:20px"><p>Add some games and your profile fills up with badges, stats, favorites, ranks and clips.</p></div>` : '')}
+  </div>`;
+}
+
+/* ---------- Painting the Profile page ---------- */
+function paintProfile(snap, meta){
+  if (meta.id && sb){
+    const c = socialCache[meta.id];
+    if (!c || (!c.loading && Date.now() - c.at > 60000)) fetchSocial(meta.id);
+    if (c && c.counts){ meta.counts = c.counts; meta.friends = c.friends; meta.followState = c.state; }
+  }
+  currentMeta = meta;
+  $('pBody').innerHTML = profileHTML(snap, meta);
+  paintLive(snap, meta);
+}
+
+// The bar above your own profile (link, find people, sign-in hints)
+let pTopKey = '';
+function paintTop(){
+  let html = '', key = '';
+  if (view === 'profile' && accountsOn()){
+    if (!user){ key = 'out'; html = `<div class="p-note"><span>Sign in to get a public profile link, followers and friends ♡</span><button class="btn primary small" data-action="signin">Sign in</button></div>`; }
+    else if (!myRow){ key = 'noname'; html = `<div class="p-note"><span>Pick a username to get your public profile link ♡</span><button class="btn primary small" data-action="pick-username">Pick username</button></div>`; }
+    else {
+      key = 'ok:' + myRow.username;
+      html = `<div class="p-tools">
+        <button class="btn" data-copy-link="${esc(myRow.username)}">🔗 Copy my profile link</button>
+        <div class="grow"><input type="search" id="findInput" placeholder="Find people by username…" aria-label="Find people"><div class="find-results" id="findResults" hidden></div></div>
+      </div>`;
+    }
+  } else if (view === 'user'){
+    key = 'user';
+    html = `<div class="p-tools"><a class="btn" href="#profile">← My profile</a></div>`;
+  }
+  if (key !== pTopKey){ pTopKey = key; $('pTop').innerHTML = html; }
+}
+
+function renderProfile(){
+  paintTop();
+  const snap = previewSnap || buildSnapshot(profile);
+  paintProfile(snap, { isMe:true, id: user && myRow ? user.id : null, username: myRow ? myRow.username : '', joined: myRow ? myRow.joined_at : '' });
+}
+
+async function renderUserPage(){
+  paintTop();
+  if (!accountsOn()){ $('pBody').innerHTML = `<div class="empty" style="margin-top:24px"><p>Public profiles aren't turned on for this site yet.</p></div>`; return; }
+  if (user && myRow && viewedName === myRow.username){ location.hash = 'profile'; return; }
+  if (viewedUser && viewedUser.username === viewedName){
+    return paintProfile(viewedUser.snap, { isMe:false, id:viewedUser.id, username:viewedUser.username, joined:viewedUser.joined_at });
+  }
+  $('pBody').innerHTML = `<div class="empty" style="margin-top:24px"><p>Loading @${esc(viewedName)}…</p></div>`;
+  if (!sb) return;   // will re-render once accounts load
+  const wanted = viewedName;
+  const { data, error } = await sb.from('profiles').select('id, username, data, joined_at').eq('username', wanted).maybeSingle();
+  if (view !== 'user' || viewedName !== wanted) return;
+  if (error || !data){
+    $('pBody').innerHTML = `<div class="empty" style="margin-top:24px"><h2>(｡•́︿•̀｡)</h2><p>No one has the username @${esc(wanted)} yet.</p></div>`;
+    return;
+  }
+  viewedUser = { id:data.id, username:data.username, joined_at:data.joined_at, snap:normalizeSnap(data.data) };
+  renderUserPage();
+}
+
+/* ---------- Followers, following, friends ---------- */
+async function fetchSocial(id){
+  socialCache[id] = { ...(socialCache[id] || {}), loading:true, at:Date.now() };
+  try {
+    const [a, b] = await Promise.all([
+      sb.from('follows').select('follower').eq('following', id),
+      sb.from('follows').select('following').eq('follower', id)
+    ]);
+    if (a.error || b.error) throw a.error || b.error;
+    const followerIds = a.data.map(r => r.follower), followingIds = b.data.map(r => r.following);
+    const friendIds = followerIds.filter(x => followingIds.includes(x));
+    let friends = [];
+    if (friendIds.length){
+      const r = await sb.from('profiles').select('id, username, name:data->>name, avatar:data->>avatar').in('id', friendIds.slice(0, 24));
+      friends = r.data || [];
+    }
+    let state = null;
+    if (user && id !== user.id){
+      const iFollow = followerIds.includes(user.id), theyFollow = followingIds.includes(user.id);
+      state = iFollow && theyFollow ? 'friends' : iFollow ? 'following' : theyFollow ? 'followsYou' : 'none';
+    }
+    socialCache[id] = { loading:false, at:Date.now(), followerIds, followingIds, friendIds, friends, state,
+                        counts:{ followers:followerIds.length, following:followingIds.length, friends:friendIds.length } };
+  } catch(err){
+    console.error(err);
+    socialCache[id] = { loading:false, at:Date.now() };
+  }
+  if (currentMeta && currentMeta.id === id && (view === 'profile' || view === 'user')) render();
+}
+
+async function toggleFollow(targetId){
+  if (!user) return openAccount();
+  if (!myRow) return openUsernameDlg();
+  const st = socialCache[targetId] && socialCache[targetId].state;
+  const res = (st === 'following' || st === 'friends')
+    ? await sb.from('follows').delete().eq('follower', user.id).eq('following', targetId)
+    : await sb.from('follows').insert({ follower:user.id, following:targetId });
+  if (res.error){ console.error(res.error); return toast("Couldn't update. Try again."); }
+  delete socialCache[targetId]; delete socialCache[user.id];
+  render();
+}
+
+const peopleDlg = $('peopleDlg');
+async function showPeople(kind){
+  const c = currentMeta && socialCache[currentMeta.id];
+  if (!c || !c.counts) return;
+  const ids = { followers:c.followerIds, following:c.followingIds, friends:c.friendIds }[kind] || [];
+  $('peopleTitle').textContent = kind[0].toUpperCase() + kind.slice(1);
+  $('peopleList').innerHTML = ids.length ? '<p class="hint">Loading…</p>' : '<p class="hint">No one here yet.</p>';
+  peopleDlg.showModal();
+  if (!ids.length) return;
+  const { data } = await sb.from('profiles').select('id, username, name:data->>name, avatar:data->>avatar').in('id', ids.slice(0, 100));
+  $('peopleList').innerHTML = (data || []).map(personHTML).join('') || '<p class="hint">No one here yet.</p>';
+}
+$('peopleList').addEventListener('click', e => { if (e.target.closest('a')) peopleDlg.close(); });
+
+// Find people by username
+let findTimer = null;
+document.addEventListener('input', e => {
+  if (e.target.id !== 'findInput') return;
+  clearTimeout(findTimer);
+  const q = cleanName(e.target.value);
+  const box = $('findResults');
+  if (q.length < 2){ box.hidden = true; return; }
+  findTimer = setTimeout(async () => {
+    const { data } = await sb.from('profiles').select('username, name:data->>name, avatar:data->>avatar').ilike('username', q + '%').limit(6);
+    box.innerHTML = (data && data.length)
+      ? data.map(p => `<a href="#u/${esc(p.username)}"><span class="pa">${p.avatar && (p.avatar.startsWith('data:image/') || safeUrl(p.avatar)) ? `<img src="${esc(p.avatar)}" alt="">` : esc(initials(p.name || p.username))}</span><span><b>${esc(p.name || p.username)}</b> <span class="meta">@${esc(p.username)}</span></span></a>`).join('')
+      : '<div class="sug-msg">No one found.</div>';
+    box.hidden = false;
+  }, 300);
+});
+document.addEventListener('click', e => { const box = $('findResults'); if (box && !e.target.closest('.grow')) box.hidden = true; });
+
+/* ---------- Live status (Steam + Discord) ---------- */
+function liveKeys(s, m){
+  if (!m.isMe && !s.privacy.live) return [];
+  const keys = [];
+  const sid = s.tags.steam ? steamIdFrom(s.tags.steam) : '';
+  if (sid && /^[A-Za-z0-9_-]{2,64}$/.test(sid) && accountsOn()) keys.push('steam:' + sid);
+  if (s.discordId) keys.push('discord:' + s.discordId);
+  return keys;
+}
+async function fetchLive(key){
+  const [kind, id] = key.split(/:(.+)/);
+  liveCache[key] = { ...(liveCache[key] || {}), loading:true, at:Date.now() };
+  let data = null;
+  try {
+    if (kind === 'steam'){
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/steam-status?id=${encodeURIComponent(id)}`, { headers:{ apikey:SUPABASE_KEY } });
+      const j = await r.json();
+      if (r.ok && !j.error) data = { kind, state:String(j.state || 'offline'), game:j.game ? String(j.game) : '', gameId:/^\d+$/.test(j.gameId || '') ? j.gameId : '', private:!!j.private };
+    } else {
+      const r = await fetch(`https://api.lanyard.rest/v1/users/${encodeURIComponent(id)}`);
+      const j = await r.json();
+      if (j && j.success && j.data){
+        const d = j.data, act = (d.activities || []).find(a => a.type === 0);
+        data = { kind, state:String(d.discord_status || 'offline'), game:act ? String(act.name) : '',
+                 song: d.listening_to_spotify && d.spotify ? `${d.spotify.song} – ${d.spotify.artist}` : '' };
+      }
+    }
+  } catch(err){ console.warn('live status', key, err); }
+  liveCache[key] = { loading:false, at:Date.now(), data };
+  const box = $('liveBox');
+  if (box && box.dataset.keys && box.dataset.keys.split(',').includes(key)) fillLive(box, box.dataset.keys.split(','), box.dataset.me === '1');
+}
+function liveCardHTML(d, isMe){
+  if (d.kind === 'steam'){
+    if (d.private && isMe) return `<div class="live-card"><span class="dot"></span><div><small>Steam</small><b>Set your Steam profile to Public to show your game</b></div></div>`;
+    if (d.game){
+      const img = d.gameId ? `<img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${d.gameId}/header.jpg" alt="">` : '<span class="dot"></span>';
+      return `<div class="live-card st-ingame">${img}<div><small>Playing on Steam</small><b>${esc(d.game)}</b></div></div>`;
+    }
+    const st = d.state === 'online' ? 'st-online' : d.state === 'offline' ? '' : 'st-idle';
+    const label = d.state === 'offline' ? 'Offline' : d.state[0].toUpperCase() + d.state.slice(1);
+    return `<div class="live-card ${st}"><span class="dot"></span><div><small>Steam</small><b>${esc(label)}</b></div></div>`;
+  }
+  const st = { online:'st-online', idle:'st-idle', dnd:'st-dnd' }[d.state] || '';
+  if (d.game) return `<div class="live-card st-ingame"><span class="dot"></span><div><small>Playing on Discord</small><b>${esc(d.game)}</b></div></div>`;
+  if (d.song) return `<div class="live-card st-online"><span class="dot"></span><div><small>Listening on Spotify</small><b>${esc(d.song)}</b></div></div>`;
+  const label = { online:'Online', idle:'Away', dnd:'Do not disturb' }[d.state] || 'Offline';
+  return `<div class="live-card ${st}"><span class="dot"></span><div><small>Discord</small><b>${label}</b></div></div>`;
+}
+function fillLive(box, keys, isMe){
+  box.innerHTML = keys.map(k => liveCache[k] && liveCache[k].data ? liveCardHTML(liveCache[k].data, isMe) : '').join('');
+  box.hidden = !box.innerHTML.trim();
+}
+function paintLive(s, m){
+  const box = $('liveBox');
+  if (!box) return;
+  const keys = liveKeys(s, m);
+  box.dataset.keys = keys.join(','); box.dataset.me = m.isMe ? '1' : '0';
+  fillLive(box, keys, m.isMe);
+  keys.forEach(k => { const c = liveCache[k]; if (!c || (!c.loading && Date.now() - c.at > 60000)) fetchLive(k); });
+}
+setInterval(() => {   // refresh status (and the profile you're looking at) every minute
+  if (view === 'user') viewedUser = null;
+  if (view === 'profile' || view === 'user') render();
+}, 60000);
+
+/* ---------- Usernames ---------- */
+async function nameStatus(n){
+  if (!USERNAME_RE.test(n)) return 'invalid';
+  if (RESERVED.includes(n)) return 'taken';
+  if (myRow && n === myRow.username) return 'mine';
+  const { data, error } = await sb.from('profiles').select('id').eq('username', n).maybeSingle();
+  if (error) return 'error';
+  return !data || (user && data.id === user.id) ? 'ok' : 'taken';
+}
+const NAME_MSG = { ok:['✓ Available!','ok'], mine:['✓ This is your username','ok'], taken:['✗ Someone already has that name','err'],
+                   invalid:['Use 3–20 lowercase letters, numbers or _','err'], error:["Couldn't check right now",'err'], checking:['Checking…',''] };
+function watchNameInput(input, stateEl){
+  let timer = null;
+  const show = k => { stateEl.textContent = NAME_MSG[k][0]; stateEl.className = 'name-state ' + NAME_MSG[k][1]; input.dataset.state = k; };
+  input.addEventListener('input', () => {
+    const n = cleanName(input.value);
+    if (input.value !== n) input.value = n;
+    if ($('pUserPreview')) $('pUserPreview').textContent = n || 'name';
+    clearTimeout(timer);
+    if (!n){ stateEl.textContent = ''; input.dataset.state = ''; return; }
+    show('checking');
+    timer = setTimeout(async () => show(await nameStatus(n)), 350);
+  });
+}
+async function claimUsername(n){
+  const res = myRow
+    ? await sb.from('profiles').update({ username:n }).eq('id', user.id).select('username, joined_at').single()
+    : await sb.from('profiles').insert({ id:user.id, username:n, data:buildSnapshot() }).select('username, joined_at').single();
+  if (res.error) return res.error.code === '23505' ? 'taken' : (res.error.message || 'error');
+  myRow = res.data;
+  return 'ok';
+}
+async function loadMyRow(){
+  if (!sb || !user) return;
+  const { data } = await sb.from('profiles').select('username, joined_at').eq('id', user.id).maybeSingle();
+  myRow = data || null;
+  pTopKey = '';
+  render();
+  if (!myRow && !sessionStorageGet('checkpoint-skip-username')) openUsernameDlg();
+}
+function sessionStorageGet(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
+function sessionStorageSet(k, v){ try { sessionStorage.setItem(k, v); } catch(e){} }
+
+const usernameDlg = $('usernameDlg');
+function openUsernameDlg(){
+  if (!user || usernameDlg.open) return;
+  if (accountDlg.open) accountDlg.close();
+  const guess = cleanName(profile.handle || (user.email || '').split('@')[0]);
+  $('unInput').value = guess;
+  $('unInput').dispatchEvent(new Event('input'));
+  usernameDlg.showModal();
+}
+watchNameInput($('unInput'), $('unState'));
+$('unLater').addEventListener('click', () => { sessionStorageSet('checkpoint-skip-username', '1'); usernameDlg.close(); });
+$('usernameForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const n = cleanName($('unInput').value);
+  const st = await nameStatus(n);
+  if (st !== 'ok' && st !== 'mine'){ $('unInput').dispatchEvent(new Event('input')); return; }
+  $('unSave').disabled = true;
+  const r = await claimUsername(n);
+  $('unSave').disabled = false;
+  if (r !== 'ok'){ $('unState').textContent = r === 'taken' ? NAME_MSG.taken[0] : r; $('unState').className = 'name-state err'; return; }
+  usernameDlg.close();
+  pTopKey = '';
+  render();
+  toast(`You're @${n} now ♡`);
+});
+
+/* ---------- Matching colors to your profile picture ---------- */
+function rgbToHsl(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  let h = 0, s = 0;
+  if (mx !== mn){
+    const d = mx - mn;
+    s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+function hslHex(h, s, l){
+  h = ((h % 360) + 360) % 360; s = Math.max(0, Math.min(1, s)); l = Math.max(0, Math.min(1, l));
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+}
+function paletteFrom(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const N = 48, c = document.createElement('canvas');
+      c.width = c.height = N;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, N, N);
+      const px = ctx.getImageData(0, 0, N, N).data;
+      const buckets = new Map();
+      let lightSum = 0, count = 0;
+      for (let i = 0; i < px.length; i += 4){
+        if (px[i + 3] < 128) continue;
+        const [h, s, l] = rgbToHsl(px[i], px[i + 1], px[i + 2]);
+        lightSum += l; count++;
+        if (s < .2 || l < .12 || l > .93) continue;          // skip greys, black and white
+        const key = Math.round(h / 15) % 24;
+        const b = buckets.get(key) || { n:0, s:0, l:0 };
+        b.n++; b.s += s; b.l += l; buckets.set(key, b);
+      }
+      if (!count) return reject(new Error('empty'));
+      let best = null;
+      for (const [key, b] of buckets){
+        const score = b.n * (b.s / b.n);
+        if (!best || score > best.score) best = { score, h:key * 15, s:b.s / b.n, l:b.l / b.n };
+      }
+      const hue = best ? best.h : 330, sat = best ? Math.min(.85, Math.max(.45, best.s)) : .25;
+      const light = lightSum / count > .6;
+      resolve(light
+        ? { bg:hslHex(hue, sat * .6, .95), panel:hslHex(hue, sat * .5, .99), text:hslHex(hue, .3, .16), accent:hslHex(hue, sat, .52) }
+        : { bg:hslHex(hue, sat * .45, .08), panel:hslHex(hue, sat * .4, .13), text:hslHex(hue, .25, .93), accent:hslHex(hue, sat, best ? Math.min(.74, Math.max(.6, best.l)) : .66) });
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
 }
 
 /* ---------- Edit profile window ---------- */
 const profileDlg = $('profileDlg');
-let draft = null;
+let draft = null, profileSaved = false;
 
 $('pTags').innerHTML = GAMER_TAGS.map(([k, label]) =>
-  `<div><label for="tag-${k}">${label}</label><input type="text" id="tag-${k}" data-tag="${k}" maxlength="50"></div>`).join('');
+  `<div><label for="tag-${k}">${label}${k === 'steam' ? ' <span class="hint">(profile link or name)</span>' : ''}</label><input type="text" id="tag-${k}" data-tag="${k}" maxlength="120"></div>`).join('');
+fillSelect($('pFrame'), Object.entries(FRAMES));
+fillSelect($('ptHead'), Object.entries(FONTS).map(([k, f]) => [k, f[0]]));
+fillSelect($('ptBody'), BODY_FONTS.map(k => [k, FONTS[k][0]]));
+watchNameInput($('pUsername'), $('pUserState'));
 
 function openProfileEditor(){
   draft = JSON.parse(JSON.stringify(profile));
+  profileSaved = false;
+  const signedIn = accountsOn() && !!user;
+  $('pHandleBox').hidden = signedIn;
+  $('pUsernameBox').hidden = !signedIn;
+  $('pUsername').value = myRow ? myRow.username : '';
+  $('pUserPreview').textContent = $('pUsername').value || 'name';
+  $('pUserState').textContent = ''; $('pUsername').dataset.state = myRow ? 'mine' : '';
   $('pName').value = draft.name; $('pHandle').value = draft.handle;
   $('pStatus').value = draft.status; $('pBio').value = draft.bio;
   $('pShape').value = draft.avatarShape; $('pBannerStyle').value = draft.bannerStyle;
+  $('pFrame').value = draft.frame; $('pAvatarPos').value = draft.avatarPos;
+  $('pDiscordId').value = draft.discordId;
   document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
+  $('pvLive').checked = draft.privacy.live; $('pvFollowers').checked = draft.privacy.followers;
+  $('pvFriends').checked = draft.privacy.friends; $('pvJoined').checked = draft.privacy.joined;
+  syncPThemeInputs();
   renderImgPreviews(); renderSectionEditor();
   profileDlg.showModal();
 }
+function syncPThemeInputs(){
+  const t = draft.pTheme.mode === 'custom' ? draft.pTheme : { ...draft.pTheme, ...profileTheme({ pTheme:{ mode:'app' } }) };
+  $('ptMode').value = draft.pTheme.mode;
+  $('ptBg').value = t.bg; $('ptPanel').value = t.panel; $('ptText').value = t.text; $('ptAccent').value = t.accent;
+  $('ptHead').value = t.headFont; $('ptBody').value = t.bodyFont; $('ptEffect').value = t.bgEffect;
+  $('ptCustom').style.opacity = draft.pTheme.mode === 'custom' ? '1' : '.5';
+}
+// Read every field into the draft, then show a live preview behind the window
+function readProfileForm(){
+  draft.name = $('pName').value.trim() || 'Player';
+  draft.handle = $('pHandle').value.trim().replace(/^@/, '');
+  draft.status = $('pStatus').value.trim();
+  draft.bio = $('pBio').value.trim();
+  draft.avatarShape = $('pShape').value; draft.bannerStyle = $('pBannerStyle').value;
+  draft.frame = $('pFrame').value; draft.avatarPos = $('pAvatarPos').value;
+  draft.discordId = $('pDiscordId').value.trim();
+  draft.tags = {};
+  document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
+  draft.privacy = { live:$('pvLive').checked, followers:$('pvFollowers').checked, friends:$('pvFriends').checked, joined:$('pvJoined').checked };
+}
+function previewDraft(){
+  if (view !== 'profile') return;
+  previewSnap = buildSnapshot(normalizeProfile(draft));
+  renderProfile();
+}
+$('profileForm').addEventListener('input', e => {
+  if (e.target.id === 'pUsername') return;
+  if (e.target.id && e.target.id.startsWith('pt') && e.target.id !== 'ptMode'){
+    // touching a color or font switches to custom profile colors
+    Object.assign(draft.pTheme, { mode:'custom', bg:$('ptBg').value, panel:$('ptPanel').value, text:$('ptText').value,
+      accent:$('ptAccent').value, headFont:$('ptHead').value, bodyFont:$('ptBody').value, bgEffect:$('ptEffect').value });
+    syncPThemeInputs();
+  }
+  readProfileForm(); previewDraft();
+});
+$('profileForm').addEventListener('change', e => {
+  if (e.target.id === 'ptMode'){
+    if (e.target.value === 'custom' && draft.pTheme.mode !== 'custom') Object.assign(draft.pTheme, profileTheme({ pTheme:{ mode:'app' } }));
+    draft.pTheme.mode = e.target.value;
+    syncPThemeInputs();
+  }
+  if (e.target.id === 'pBannerStyle' && e.target.value === 'image' && !draft.banner) toast('Upload a banner image too');
+  readProfileForm(); previewDraft();
+});
+$('ptMatch').addEventListener('click', async () => {
+  if (!draft.avatar) return toast('Upload a profile picture first');
+  try {
+    const pal = await paletteFrom(draft.avatar);
+    Object.assign(draft.pTheme, pal, { mode:'custom' });
+    syncPThemeInputs(); previewDraft();
+    toast('Colors matched to your picture ✨');
+  } catch(err){ toast("Couldn't read that picture's colors"); }
+});
+profileDlg.addEventListener('close', () => {
+  previewSnap = null;
+  if (!profileSaved) render();
+});
+
 function renderImgPreviews(){
   $('pAvatarPrev').style.backgroundImage = draft.avatar ? `url("${draft.avatar}")` : '';
   $('pBannerPrev').style.backgroundImage = draft.banner ? `url("${draft.banner}")` : '';
@@ -1513,17 +2307,16 @@ function renderSectionEditor(){
 }
 $('pSections').addEventListener('click', e => {
   const b = e.target.closest('[data-sec-move]');
-  if (b){
-    const i = +b.dataset.secMove, j = i + (+b.dataset.dir);
-    [draft.sections[i], draft.sections[j]] = [draft.sections[j], draft.sections[i]];
-    renderSectionEditor();
-  }
+  if (!b) return;
+  const i = +b.dataset.secMove, j = i + (+b.dataset.dir);
+  [draft.sections[i], draft.sections[j]] = [draft.sections[j], draft.sections[i]];
+  renderSectionEditor(); previewDraft();
 });
 $('pSections').addEventListener('change', e => {
-  if (e.target.dataset.secOn !== undefined) draft.sections[+e.target.dataset.secOn].on = e.target.checked;
+  if (e.target.dataset.secOn !== undefined){ draft.sections[+e.target.dataset.secOn].on = e.target.checked; previewDraft(); }
 });
 
-// Shrink uploaded pictures so they fit in browser storage
+// Shrink uploaded pictures so they fit in storage
 function readImage(file, maxW, maxH, square){
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -1544,16 +2337,16 @@ function readImage(file, maxW, maxH, square){
 }
 $('pAvatarBtn').addEventListener('click', () => $('pAvatarFile').click());
 $('pBannerBtn').addEventListener('click', () => $('pBannerFile').click());
-$('pAvatarDel').addEventListener('click', () => { draft.avatar = ''; renderImgPreviews(); });
+$('pAvatarDel').addEventListener('click', () => { draft.avatar = ''; renderImgPreviews(); previewDraft(); });
 $('pBannerDel').addEventListener('click', () => {
   draft.banner = '';
   if (draft.bannerStyle === 'image'){ draft.bannerStyle = 'gradient'; $('pBannerStyle').value = 'gradient'; }
-  renderImgPreviews();
+  renderImgPreviews(); previewDraft();
 });
 $('pAvatarFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { draft.avatar = await readImage(f, 320, 320, true); renderImgPreviews(); }
+  try { draft.avatar = await readImage(f, 320, 320, true); renderImgPreviews(); previewDraft(); }
   catch(err){ toast("That picture couldn't be loaded"); }
 });
 $('pBannerFile').addEventListener('change', async e => {
@@ -1562,22 +2355,30 @@ $('pBannerFile').addEventListener('change', async e => {
   try {
     draft.banner = await readImage(f, 1500, 500, false);
     draft.bannerStyle = 'image'; $('pBannerStyle').value = 'image';
-    renderImgPreviews();
+    renderImgPreviews(); previewDraft();
   } catch(err){ toast("That picture couldn't be loaded"); }
 });
 
-$('profileForm').addEventListener('submit', e => {
+$('profileForm').addEventListener('submit', async e => {
   e.preventDefault();
-  draft.name = $('pName').value.trim() || 'Player';
-  draft.handle = $('pHandle').value.trim().replace(/^@/, '');
-  draft.status = $('pStatus').value.trim();
-  draft.bio = $('pBio').value.trim();
-  draft.avatarShape = $('pShape').value;
-  draft.bannerStyle = $('pBannerStyle').value;
-  draft.tags = {};
-  document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
+  readProfileForm();
+  // Save a new username first (it might be taken)
+  if (accountsOn() && user){
+    const n = cleanName($('pUsername').value);
+    if (n && (!myRow || n !== myRow.username)){
+      const st = await nameStatus(n);
+      if (st !== 'ok'){ $('pUsername').dispatchEvent(new Event('input')); $('pUsername').focus(); return; }
+      $('pSave').disabled = true;
+      const r = await claimUsername(n);
+      $('pSave').disabled = false;
+      if (r !== 'ok'){ $('pUserState').textContent = r === 'taken' ? NAME_MSG.taken[0] : r; $('pUserState').className = 'name-state err'; return; }
+      pTopKey = '';
+    }
+  }
   profile = normalizeProfile(draft);
   saveProfile();
+  profileSaved = true;
+  previewSnap = null;
   profileDlg.close();
   render();
   toast('Profile saved');
@@ -1680,11 +2481,25 @@ document.addEventListener('click', e => {
   const t = e.target;
   const clip = t.closest('[data-clip]');
   if (clip) return showClip(clip.dataset.clip, clip.dataset.clipId);
+  const clipUrl = t.closest('[data-clip-url]');
+  if (clipUrl) return showClipUrl(clipUrl.dataset.clipUrl, clipUrl.dataset.clipTitle);
+  const follow = t.closest('[data-follow]');
+  if (follow) return toggleFollow(follow.dataset.follow);
+  const people = t.closest('[data-people]');
+  if (people) return showPeople(people.dataset.people);
+  const link = t.closest('[data-copy-link]');
+  if (link){
+    const url = profileLink(link.dataset.copyLink);
+    navigator.clipboard?.writeText(url).then(() => toast('Profile link copied ♡'), () => prompt('Copy your link:', url));
+    return;
+  }
   const open = t.closest('[data-open]');
   if (open) return openDetail(open.dataset.open);
   const action = t.closest('[data-action]');
   if (action && action.dataset.action === 'add') return openForm(null, mode());
   if (action && action.dataset.action === 'edit-profile') return openProfileEditor();
+  if (action && action.dataset.action === 'signin') return openAccount();
+  if (action && action.dataset.action === 'pick-username') return openUsernameDlg();
   const copy = t.closest('[data-copy]');
   if (copy){
     navigator.clipboard?.writeText(copy.dataset.copy).then(() => toast('Copied ' + copy.dataset.copy), () => {});
@@ -1738,6 +2553,11 @@ async function pushNow(){
   });
   if (error){ console.error(error); setSync('error'); return false; }
   syncMeta.userId = user.id; syncMeta.lastSyncedAt = now; saveMeta();
+  // Update your public profile too
+  if (myRow){
+    const pub = await sb.from('profiles').update({ data:buildSnapshot(), updated_at:now }).eq('id', user.id);
+    if (pub.error) console.error('profile publish', pub.error);
+  }
   setSync('saved');
   return true;
 }
@@ -1793,6 +2613,7 @@ async function afterSignIn(){
   } finally {
     signingIn = false;
   }
+  await loadMyRow();
 }
 
 let choiceResolve = null;
@@ -1904,6 +2725,7 @@ $('signOutBtn').addEventListener('click', async () => {
   const wipe = confirm('Also remove your games from this browser?\n\nThey stay safe in your account. Choose OK on a shared computer, or Cancel to keep a copy here.');
   await sb.auth.signOut();
   user = null; clearTimeout(syncTimer); syncTimer = null;   // never upload after signing out
+  myRow = null; socialCache = {}; pTopKey = '';
   syncMeta.userId = null; saveMeta();
   setSync('idle');
   if (wipe){
@@ -1942,9 +2764,11 @@ async function initAccounts(){
         if (accountDlg.open) renderAccountDlg();
         setTimeout(afterSignIn, 0);   // run outside the auth callback
       } else {
-        setSync('idle');
+        myRow = null; socialCache = {}; pTopKey = '';
+        setSync('idle'); render();
       }
     });
+    if (view === 'user' || view === 'profile') render();   // public profiles need the database
   } catch(err){
     console.error(err);
     $('accountBtn').textContent = '☁ Offline';

@@ -33,8 +33,11 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 ♡ Completion checklists for bosses, collectibles and achievements<br>
 ♡ PvP section with current rank, peak rank and your main<br>
 ♡ Clips from YouTube, Twitch or Streamable<br>
-♡ Profile with banner, picture, bio, gamer tags and favorites<br>
-♡ Themes, colors and fonts you can change<br>
+♡ Public profile with a unique username and your own link<br>
+♡ Profile themes everyone sees, or match colors to your picture<br>
+♡ Cute picture frames, badges, and clickable gamer tags<br>
+♡ Live status: shows the game you're playing on Steam or Discord<br>
+♡ Follow people, see friends and followers (you choose what's shown)<br>
 ♡ Optional account so your games save everywhere
 
 ## Two ways to use it (˶ᵔ ᵕ ᵔ˶)
@@ -88,7 +91,8 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 - [x] Themes and profile
 - [x] Game search with banners
 - [x] Accounts that save everywhere
-- [ ] Shareable profile links
+- [x] Public profiles, usernames and friends
+- [x] Live Steam and Discord status
 - [ ] Steam library import
 - [ ] Riot and Battle.net stats
 - [ ] Community checklists
