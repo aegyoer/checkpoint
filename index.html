@@ -161,6 +161,14 @@ dialog > form{display:contents}
 .x{all:unset;cursor:pointer;color:var(--muted);font-size:1.4rem;line-height:1;padding:4px 9px;border-radius:8px}
 .x:hover{background:var(--panel-2);color:var(--text)}
 .x.on-banner{position:absolute;top:10px;right:10px;z-index:3;background:rgba(0,0,0,.5);color:#fff}
+.pic-btn{position:absolute;top:10px;left:10px;z-index:3;background:rgba(0,0,0,.55);color:#fff;border-color:transparent;backdrop-filter:blur(4px)}
+.pic-btn:hover{background:rgba(0,0,0,.75)}
+.cover-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cover-opt{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px;align-content:start;border-radius:var(--radius);padding:4px;border:2px solid transparent}
+.cover-opt:hover,.cover-opt.on{border-color:var(--accent)}
+.cover-opt img{width:100%;height:110px;object-fit:cover;border-radius:calc(var(--radius) * .7);background:var(--panel-2)}
+.cover-opt.tall img{height:180px}
+.cover-opt span{font-size:.78rem;color:var(--muted);text-align:center}
 .dlg-body{padding:18px 20px;display:grid;gap:16px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row3{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
@@ -636,6 +644,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
 <!-- Pop-up: game details -->
 <dialog id="detailDlg" class="wide">
   <button type="button" class="x on-banner" data-close aria-label="Close">×</button>
+  <button type="button" class="btn small pic-btn" id="dPicBtn">🖼 Change picture</button>
   <div class="d-banner" id="dBanner"></div>
   <div class="dlg-body">
     <div class="row3">
@@ -693,6 +702,32 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
     <button class="btn danger left" id="deleteBtn">Delete game</button>
     <button class="btn" id="editBtn">Edit details</button>
     <button class="btn primary" data-close>Done</button>
+  </div>
+</dialog>
+
+<!-- Pop-up: change a game's picture -->
+<dialog id="coverDlg" class="wide">
+  <div class="dlg-head">
+    <h2>Change picture</h2>
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+  </div>
+  <div class="dlg-body">
+    <div id="coverSteamBox" style="display:grid;gap:8px">
+      <h3 style="margin:0;font-size:.98rem">Steam artwork</h3>
+      <div class="cover-opts" id="coverSteam"></div>
+    </div>
+    <div style="display:grid;gap:8px">
+      <h3 style="margin:0;font-size:.98rem">Your own</h3>
+      <div class="btn-row">
+        <button type="button" class="btn" id="coverUpload">📷 Upload a picture</button>
+        <input type="file" id="coverFile" accept="image/*" hidden>
+        <button type="button" class="btn danger" id="coverRemove">Remove picture</button>
+      </div>
+      <form class="inline-form" id="coverUrlForm">
+        <input type="url" id="coverUrl" placeholder="…or paste an image link (https://…)" aria-label="Image link">
+        <button class="btn" type="submit">Use link</button>
+      </form>
+    </div>
   </div>
 </dialog>
 
@@ -1085,6 +1120,7 @@ function toast(msg){
 // If a smaller RAWG image fails, fall back to the full-size one
 document.addEventListener('error', e => {
   const img = e.target;
+  if (img.tagName === 'IMG' && img.closest('.cover-opt')){ img.closest('.cover-opt').remove(); return; }   // artwork Steam doesn't have
   if (img.tagName === 'IMG' && img.dataset.full && img.src !== img.dataset.full){ img.src = img.dataset.full; }
   else if (img.tagName === 'IMG' && img.closest('main, dialog')){ img.remove(); }   // hide broken pictures
 }, true);
@@ -1667,6 +1703,46 @@ $('deleteBtn').addEventListener('click', () => {
   saveGames(); saveProfile();
   detailDlg.close();
   render();
+});
+
+
+/* ---------- Change a game's picture ---------- */
+const coverDlg = $('coverDlg');
+const STEAM_ARTS = [['library_600x900', 'Library (tall)', true], ['header', 'Store header'], ['library_hero', 'Hero banner'], ['capsule_616x353', 'Capsule']];
+function steamArt(appid, kind){ return `https://cdn.cloudflare.steamstatic.com/steam/apps/${Number(appid)}/${kind}.jpg`; }
+function openCoverPicker(){
+  const g = findGame(openId); if (!g) return;
+  $('coverSteamBox').hidden = !g.steamAppId;
+  $('coverSteam').innerHTML = g.steamAppId ? STEAM_ARTS.map(([kind, label, tall]) => {
+    const url = steamArt(g.steamAppId, kind);
+    return `<button type="button" class="cover-opt ${tall ? 'tall' : ''} ${g.cover === url ? 'on' : ''}" data-cover="${esc(url)}">
+      <img src="${esc(url)}" alt=""><span>${label}</span></button>`;
+  }).join('') : '';
+  $('coverUrl').value = '';
+  coverDlg.showModal();
+}
+function setCover(url){
+  const g = findGame(openId); if (!g) return;
+  g.cover = url;
+  saveGames(); renderDetail(); render();
+  if (coverDlg.open) coverDlg.close();
+  toast(url ? 'Picture changed ♡' : 'Picture removed');
+}
+$('dPicBtn').addEventListener('click', openCoverPicker);
+$('coverSteam').addEventListener('click', e => { const b = e.target.closest('[data-cover]'); if (b) setCover(b.dataset.cover); });
+$('coverUpload').addEventListener('click', () => $('coverFile').click());
+$('coverFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { setCover(await readImage(f, 640, 640, false)); }
+  catch(err){ toast("That picture couldn't be loaded"); }
+});
+$('coverRemove').addEventListener('click', () => setCover(''));
+$('coverUrlForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const url = safeUrl($('coverUrl').value.trim());
+  if (!url) return toast('Paste a full link starting with https://');
+  setCover(url);
 });
 
 
