@@ -90,7 +90,7 @@ a{color:var(--accent)}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.danger{color:var(--c-dropped)}
 .btn.small{padding:5px 9px;font-size:.82rem}
-input[type=text],input[type=url],input[type=number],input[type=search],select,textarea{
+input[type=text],input[type=url],input[type=number],input[type=search],input[type=password],input[type=email],select,textarea{
   width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:9px 12px;outline:none
 }
 textarea{resize:vertical}
@@ -284,6 +284,22 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .preview-card{max-width:240px}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap}
 
+/* ---------- Account ---------- */
+#accountBtn.warn{color:var(--c-dropped);border-color:var(--c-dropped)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{border:1px solid var(--line);border-radius:var(--radius);padding:12px;background:var(--panel-2)}
+.mode.on{border-color:var(--accent)}
+.mode b{display:block;margin-bottom:2px}
+.mode p{margin:0;font-size:.84rem;color:var(--muted)}
+.acct-msg{margin:0;font-size:.86rem;min-height:1.2em;color:var(--muted)}
+.acct-msg.err{color:var(--c-dropped)}
+.acct-msg.ok{color:var(--c-completed)}
+.acct-card{display:flex;gap:14px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.acct-avatar{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:1.3rem;flex-shrink:0}
+.acct-card b{word-break:break-all}
+.acct-sync{font-size:.84rem;color:var(--muted);margin-top:2px}
+@media (max-width:640px){ .modes{grid-template-columns:1fr} }
+
 /* Toast message */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:500;pointer-events:none;transition:.2s;z-index:100}
 .toast.show{opacity:1;transform:translateX(-50%)}
@@ -299,7 +315,9 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
 @media (max-width:640px){
   .top{flex-wrap:wrap;gap:10px}
   .tabs{order:3;flex-basis:100%}
-  .logo{flex:1}
+  .logo{flex:1;min-width:0}
+  .top .btn{padding:7px 11px;font-size:.86rem}
+  .hide-sm{display:none}
   .stats{grid-template-columns:repeat(2,1fr)}
   .p-stats{grid-template-columns:repeat(2,1fr)}
   .row,.row3,.tag-grid,.clip-form{grid-template-columns:1fr}
@@ -336,7 +354,8 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
       <a href="#profile" data-view="profile">Profile</a>
       <a href="#customize" data-view="customize">Customize</a>
     </nav>
-    <button class="btn primary" id="addBtn">+ Add game</button>
+    <button class="btn" id="accountBtn" hidden>Sign in</button>
+    <button class="btn primary" id="addBtn">+ Add<span class="hide-sm"> game</span></button>
   </div>
 </header>
 
@@ -426,7 +445,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
         </div>
         <div class="panel">
           <h2>Your data</h2>
-          <p class="hint">Everything is stored in this browser only. Export a backup now and then, or to move to another device.</p>
+          <p class="hint" id="dataHint">Everything is stored in this browser only. Export a backup now and then, or sign in to save it to an account.</p>
           <div class="btn-row">
             <button class="btn" id="cExport">Export backup</button>
             <button class="btn" id="cImport">Import backup</button>
@@ -440,7 +459,9 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
 </main>
 
 <footer>
-  Your data stays in your browser · Back up from <a href="#customize">Customize</a> ·
+  <span id="footStorage">Your data is saved in this browser</span> ·
+  <a id="bugLink" target="_blank" rel="noopener">Report a bug</a> ·
+  <a id="featureLink" target="_blank" rel="noopener">Request a feature</a> ·
   Game info &amp; images from <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>
 </footer>
 
@@ -563,6 +584,67 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   </div>
 </dialog>
 
+<!-- Pop-up: account (sign in / sign up) -->
+<dialog id="accountDlg">
+  <div class="dlg-head">
+    <h2 id="acctTitle">Sign in</h2>
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+  </div>
+
+  <!-- shown when signed out -->
+  <div class="dlg-body" id="acctOut">
+    <div class="modes">
+      <div class="mode">
+        <b>Just this browser</b>
+        <p>No sign-up. Your games are saved on this device only. Use <i>Export backup</i> to keep a copy.</p>
+      </div>
+      <div class="mode on">
+        <b>With an account ☁</b>
+        <p>Sign in on any phone or computer. Everything saves by itself, so no backups needed.</p>
+      </div>
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Sign in or create account">
+      <input type="radio" name="acctMode" id="acctModeIn" value="in" checked><label for="acctModeIn">Sign in</label>
+      <input type="radio" name="acctMode" id="acctModeUp" value="up"><label for="acctModeUp">Create account</label>
+    </div>
+    <form id="acctForm" style="display:grid;gap:12px">
+      <div><label for="acctEmailInput">Email</label><input type="text" inputmode="email" id="acctEmailInput" autocomplete="email" required placeholder="you@example.com"></div>
+      <div><label for="acctPass">Password</label><input type="password" id="acctPass" autocomplete="current-password" required minlength="6" placeholder="At least 6 characters"></div>
+      <p class="acct-msg" id="acctMsg" role="status"></p>
+      <button class="btn primary" type="submit" id="acctSubmit" style="justify-content:center">Sign in</button>
+    </form>
+    <p class="hint">Signing in keeps the games already in this browser, so nothing gets lost.</p>
+  </div>
+
+  <!-- shown when signed in -->
+  <div class="dlg-body" id="acctIn" hidden>
+    <div class="acct-card">
+      <div class="acct-avatar">☁</div>
+      <div>
+        <div class="meta">Signed in as</div>
+        <b id="acctEmail"></b>
+        <div class="acct-sync" id="acctSync"></div>
+      </div>
+    </div>
+    <p class="hint">Your games, profile and theme save to your account automatically. Sign in with the same email on another device to see them there.</p>
+    <div class="btn-row">
+      <button class="btn" id="syncNowBtn">Save now</button>
+      <button class="btn danger" id="signOutBtn">Sign out</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Pop-up: choose which data to keep -->
+<dialog id="choiceDlg">
+  <div class="dlg-head"><h2>Which games should we keep?</h2></div>
+  <div class="dlg-body">
+    <p id="choiceText" style="margin:0"></p>
+    <button class="btn primary" data-choice="cloud" style="justify-content:center">Use my account's games</button>
+    <button class="btn" data-choice="local" style="justify-content:center">Use this browser's games</button>
+    <p class="hint">The other copy gets replaced. Not sure? Pick one, then go to Customize and export a backup any time.</p>
+  </div>
+</dialog>
+
 <!-- Pop-up: edit profile -->
 <dialog id="profileDlg" class="wide">
   <form id="profileForm" autocomplete="off">
@@ -652,6 +734,14 @@ const RAWG_KEY = '';
 
 // Your site's name (shown in the top-left corner)
 const SITE_NAME = 'Checkpoint';
+
+// Accounts (optional). Paste your Supabase "Project URL" and
+// "Publishable key" here to turn on Sign in. Leave empty to turn it off.
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+
+// Your GitHub repo, used for the "Report a bug" and "Request a feature" links
+const GITHUB_REPO = 'aegyoer/checkpoint';
 
 const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Completed', dropped:'Dropped', wishlist:'Wishlist' };
 const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', retired:'Retired' };
@@ -813,9 +903,14 @@ function normalizeTheme(t){
 let games   = (load(KEYS.games, []) || []).filter(Boolean).map(normalizeGame);
 let profile = normalizeProfile(load(KEYS.profile, null));
 let theme   = normalizeTheme(load(KEYS.theme, null));
-const saveGames   = () => save(KEYS.games, games);
-const saveProfile = () => save(KEYS.profile, profile);
-const saveTheme   = () => save(KEYS.theme, theme);
+// Account-sync bookkeeping (see section 12)
+const SYNC_KEY = 'checkpoint-sync-v1';
+let syncMeta = load(SYNC_KEY, {}) || {};
+let sb = null, user = null, syncTimer = null, applyingCloud = false, signingIn = false, syncState = 'idle';
+
+const saveGames   = () => { save(KEYS.games, games); markChanged(); };
+const saveProfile = () => { save(KEYS.profile, profile); markChanged(); };
+const saveTheme   = () => { save(KEYS.theme, theme); markChanged(); };
 
 
 /* ================================================================
@@ -1554,8 +1649,16 @@ $('cImportFile').addEventListener('change', async e => {
     toast('Backup imported');
   } catch(err){ alert("That file doesn't look like a Checkpoint backup."); }
 });
-$('cErase').addEventListener('click', () => {
-  if (!confirm('Erase ALL your games, profile and theme from this browser? Export a backup first if you want to keep them.')) return;
+$('cErase').addEventListener('click', async () => {
+  const where = user ? 'from this browser AND your account' : 'from this browser';
+  if (!confirm(`Erase ALL your games, profile and theme ${where}? Export a backup first if you want to keep them.`)) return;
+  if (user){
+    games = []; profile = normalizeProfile(null); theme = normalizeTheme(null);
+    saveGames(); saveProfile(); saveTheme(); applyTheme();
+    await pushNow();
+    location.hash = 'library'; render();
+    return toast('Everything erased');
+  }
   Object.values(KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
   location.hash = 'library';
   location.reload();
@@ -1591,16 +1694,273 @@ document.addEventListener('click', e => {
   if (close) return close.closest('dialog').close();
 });
 
-// Clicking the dark area outside a pop-up closes it
-document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+// Clicking the dark area outside a pop-up closes it (except the "which games" question)
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => {
+  if (e.target === d && d.id !== 'choiceDlg') d.close();
+}));
 
 
 /* ================================================================
-   12. START
+   12. ACCOUNTS & AUTO-SAVE (Supabase)
+   How it works: your whole library is saved as one record in your
+   account. Every change is saved in this browser right away, then
+   sent to your account a second later.
+   ================================================================ */
+const accountsOn = () => !!(SUPABASE_URL && SUPABASE_KEY);
+const accountDlg = $('accountDlg'), choiceDlg = $('choiceDlg');
+const time = s => Date.parse(s || 0) || 0;
+function saveMeta(){ save(SYNC_KEY, syncMeta); }
+
+// Called after every local save
+function markChanged(){
+  if (applyingCloud) return;
+  syncMeta.localChangedAt = new Date().toISOString();
+  saveMeta();
+  if (user && sb && !signingIn) queueSync();
+}
+function queueSync(){
+  setSync('saving');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushNow, 1200);   // wait a moment so typing doesn't spam the server
+}
+function setSync(state){ syncState = state; renderAccountUI(); }
+
+// Send everything to your account
+async function pushNow(){
+  clearTimeout(syncTimer); syncTimer = null;
+  if (!sb || !user) return false;
+  const now = new Date().toISOString();
+  setSync('saving');
+  const { error } = await sb.from('checkpoint_data').upsert({
+    user_id: user.id,
+    data: { app:'checkpoint', version:2, games, profile, theme },
+    updated_at: now
+  });
+  if (error){ console.error(error); setSync('error'); return false; }
+  syncMeta.userId = user.id; syncMeta.lastSyncedAt = now; saveMeta();
+  setSync('saved');
+  return true;
+}
+
+// Get what's saved in your account
+async function fetchCloud(){
+  const { data, error } = await sb.from('checkpoint_data').select('data, updated_at').eq('user_id', user.id).maybeSingle();
+  if (error) throw error;
+  return data;   // null if this account has nothing saved yet
+}
+
+// Replace this browser's data with the account's data
+function applyCloud(row){
+  const d = row.data || {};
+  applyingCloud = true;
+  games = (Array.isArray(d.games) ? d.games : []).filter(g => g && g.title).map(normalizeGame);
+  profile = normalizeProfile(d.profile);
+  theme = normalizeTheme(d.theme);
+  saveGames(); saveProfile(); saveTheme();
+  applyingCloud = false;
+  Object.assign(syncMeta, { userId:user.id, lastSyncedAt:row.updated_at, localChangedAt:row.updated_at });
+  saveMeta();
+  applyTheme(); render();
+  if (detailDlg.open) detailDlg.close();
+  setSync('saved');
+}
+
+// Decide what to do when someone signs in (or opens the site already signed in)
+async function afterSignIn(){
+  if (signingIn) return;
+  signingIn = true;
+  setSync('loading');
+  try {
+    const cloud = await fetchCloud();
+    if (syncMeta.userId === user.id){
+      // This browser was already linked to this account
+      const unsavedHere = time(syncMeta.localChangedAt) > time(syncMeta.lastSyncedAt);
+      const cloudUnchanged = cloud && time(cloud.updated_at) <= time(syncMeta.lastSyncedAt);
+      if (!cloud || (unsavedHere && cloudUnchanged)) await pushNow();
+      else applyCloud(cloud);
+    } else {
+      // First time signing in on this browser
+      const cloudGames = cloud && cloud.data && Array.isArray(cloud.data.games) ? cloud.data.games.length : 0;
+      if (!cloud) await pushNow();
+      else if (!games.length) applyCloud(cloud);
+      else if ((await askChoice(cloudGames, games.length)) === 'cloud') applyCloud(cloud);
+      else await pushNow();
+    }
+  } catch(err){
+    console.error(err);
+    setSync('error');
+    toast("Couldn't reach your account. Changes are still saved in this browser.");
+  } finally {
+    signingIn = false;
+  }
+}
+
+let choiceResolve = null;
+function askChoice(cloudCount, localCount){
+  const s = n => n === 1 ? '' : 's';
+  $('choiceText').textContent = `Your account already has ${cloudCount} game${s(cloudCount)} saved, and this browser has ${localCount} game${s(localCount)}. Which ones do you want to keep?`;
+  if (accountDlg.open) accountDlg.close();
+  choiceDlg.showModal();
+  return new Promise(resolve => { choiceResolve = resolve; });
+}
+choiceDlg.addEventListener('click', e => {
+  const b = e.target.closest('[data-choice]');
+  if (!b) return;
+  choiceDlg.close();
+  if (choiceResolve){ choiceResolve(b.dataset.choice); choiceResolve = null; }
+});
+choiceDlg.addEventListener('cancel', e => e.preventDefault());   // must pick one
+
+/* ---------- Account button + window ---------- */
+const SYNC_TEXT = {
+  idle:'Up to date', loading:'Loading your games…', saving:'Saving…',
+  saved:'All changes saved', error:"Couldn't save to your account. It will try again on your next change."
+};
+const SYNC_BTN = { idle:'☁ Saved', loading:'☁ Loading…', saving:'☁ Saving…', saved:'☁ Saved', error:'☁ Not saved' };
+
+function renderAccountUI(){
+  const btn = $('accountBtn');
+  btn.hidden = !accountsOn();
+  btn.textContent = user ? SYNC_BTN[syncState] : 'Sign in';
+  btn.classList.toggle('warn', !!user && syncState === 'error');
+  $('footStorage').textContent = user ? 'Saved to your account' : 'Your data is saved in this browser';
+  $('dataHint').textContent = user
+    ? 'You are signed in, so everything saves to your account automatically. Backups are optional.'
+    : 'Everything is stored in this browser only. Export a backup now and then' + (accountsOn() ? ', or sign in to save it to an account.' : '.');
+  if (accountDlg.open) renderAccountDlg();
+}
+
+let acctMode = 'in';
+function renderAccountDlg(){
+  $('acctOut').hidden = !!user;
+  $('acctIn').hidden = !user;
+  $('acctTitle').textContent = user ? 'Your account' : (acctMode === 'up' ? 'Create an account' : 'Sign in');
+  $('acctSubmit').textContent = acctMode === 'up' ? 'Create account' : 'Sign in';
+  $('acctPass').setAttribute('autocomplete', acctMode === 'up' ? 'new-password' : 'current-password');
+  if (user){
+    $('acctEmail').textContent = user.email || '';
+    const when = syncMeta.lastSyncedAt ? ' · last saved ' + new Date(syncMeta.lastSyncedAt).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : '';
+    $('acctSync').textContent = SYNC_TEXT[syncState] + (syncState === 'saved' || syncState === 'idle' ? when : '');
+  }
+}
+function acctMsg(text, kind = ''){ $('acctMsg').textContent = text; $('acctMsg').className = 'acct-msg ' + kind; }
+function friendlyError(msg){
+  const m = String(msg || '');
+  if (/invalid login/i.test(m)) return 'Wrong email or password.';
+  if (/not confirmed/i.test(m)) return 'Please confirm your email first. Check your inbox for the link.';
+  if (/already registered|already exists/i.test(m)) return 'That email already has an account. Try Sign in instead.';
+  if (/rate limit/i.test(m)) return 'Too many tries. Please wait a few minutes and try again.';
+  if (/fetch|network/i.test(m)) return "Couldn't connect. Check your internet and try again.";
+  return m || 'Something went wrong. Please try again.';
+}
+
+function openAccount(){
+  if (!sb){ return toast('Accounts are still loading. Try again in a moment.'); }
+  acctMsg('');
+  renderAccountDlg();
+  accountDlg.showModal();
+}
+$('accountBtn').addEventListener('click', openAccount);
+document.querySelectorAll('input[name=acctMode]').forEach(r => r.addEventListener('change', () => {
+  acctMode = r.value; acctMsg(''); renderAccountDlg();
+}));
+
+$('acctForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('acctEmailInput').value.trim();
+  const password = $('acctPass').value;
+  if (!/^\S+@\S+\.\S+$/.test(email)) return acctMsg('Please enter a valid email.', 'err');
+  if (password.length < 6) return acctMsg('Your password needs at least 6 characters.', 'err');
+  $('acctSubmit').disabled = true;
+  acctMsg('One moment…');
+  try {
+    if (acctMode === 'up'){
+      const { data, error } = await sb.auth.signUp({ email, password, options:{ emailRedirectTo: location.origin + location.pathname } });
+      if (error) throw error;
+      if (!data.session){
+        acctMsg('Almost done! Check your email and click the link to confirm, then sign in here.', 'ok');
+        return;
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+    $('acctPass').value = '';
+    acctMsg('');
+    toast('Signed in ♡');
+  } catch(err){
+    acctMsg(friendlyError(err.message), 'err');
+  } finally {
+    $('acctSubmit').disabled = false;
+  }
+});
+
+$('syncNowBtn').addEventListener('click', async () => {
+  if (await pushNow()) toast('Saved to your account');
+});
+
+$('signOutBtn').addEventListener('click', async () => {
+  if (syncTimer) await pushNow();
+  const wipe = confirm('Also remove your games from this browser?\n\nThey stay safe in your account. Choose OK on a shared computer, or Cancel to keep a copy here.');
+  await sb.auth.signOut();
+  user = null; clearTimeout(syncTimer); syncTimer = null;   // never upload after signing out
+  syncMeta.userId = null; saveMeta();
+  setSync('idle');
+  if (wipe){
+    games = []; profile = normalizeProfile(null); theme = normalizeTheme(null);
+    saveGames(); saveProfile(); saveTheme(); applyTheme(); render();
+  }
+  accountDlg.close();
+  toast('Signed out');
+});
+
+// Save right away if you leave the page with a change still waiting
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && syncTimer) pushNow();
+});
+
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function initAccounts(){
+  renderAccountUI();
+  if (!accountsOn()) return;
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sb.auth.onAuthStateChange((event, session) => {
+      const next = session ? session.user : null;
+      const changed = (next && next.id) !== (user && user.id);
+      user = next;
+      if (!changed) return;
+      if (user){
+        if (accountDlg.open) renderAccountDlg();
+        setTimeout(afterSignIn, 0);   // run outside the auth callback
+      } else {
+        setSync('idle');
+      }
+    });
+  } catch(err){
+    console.error(err);
+    $('accountBtn').textContent = '☁ Offline';
+  }
+}
+
+
+/* ================================================================
+   13. START
    ================================================================ */
 $('siteName').textContent = SITE_NAME;
+$('bugLink').href = `https://github.com/${GITHUB_REPO}/issues/new?template=bug_report.yml`;
+$('featureLink').href = `https://github.com/${GITHUB_REPO}/issues/new?template=feature_request.yml`;
 applyTheme();
 route();
+initAccounts();
 </script>
 </body>
 </html>
