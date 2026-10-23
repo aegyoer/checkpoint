@@ -3145,6 +3145,21 @@ function applySteamHours(matched){
 }
 
 // Quietly refresh hours on games you already track (at most every 10 minutes)
+// Your choice from the Sync window ("add my other games"), remembered on this device
+function steamImportPref(){ try { return JSON.parse(localStorage.getItem('checkpoint-steam-import') || 'null'); } catch(e){ return null; } }
+function setSteamImportPref(v){ try { localStorage.setItem('checkpoint-steam-import', JSON.stringify(v)); } catch(e){} }
+function addSteamGames(list, playedOnly){
+  const now = Date.now();
+  let added = 0;
+  list.filter(sg => !playedOnly || sg.hours > 0).sort((a, b) => b.hours - a.hours).forEach((sg, i) => {
+    const pvp = looksPvp(sg.name, '');
+    const status = sg.recent > 0 ? (pvp ? 'main' : 'playing') : (pvp ? 'casual' : 'backlog');
+    games.push(normalizeGame({ title:sg.name, type:pvp ? 'pvp' : 'story', status, platform:'Steam', hours:sg.hours,
+      steamAppId:sg.appid, verified:true, cover:steamHeader(sg.appid), added:now - i }));
+    added++;
+  });
+  return added;
+}
 async function autoSteamSync(){
   const last = Number(sessionStorageGet('checkpoint-steam-sync') || 0);
   if (Date.now() - last < 600000) return;
@@ -3152,9 +3167,14 @@ async function autoSteamSync(){
   delete steamCache[user.id];
   const data = await fetchSteamFor(user.id);
   if (!data || !data.linked || data.private) return;
-  const changed = applySteamHours(matchSteam(data.games).matched);
+  const plan = matchSteam(data.games);
+  const changed = applySteamHours(plan.matched);
+  // If you chose to import your whole library, new purchases get added too
+  const pref = steamImportPref();
+  const added = pref && pref.all ? addSteamGames(plan.others, pref.playedOnly) : 0;
+  if (added) toast(`Added ${added} new Steam game${added === 1 ? '' : 's'} ♡`);
   const achChanged = await refreshAchievements();
-  if (changed || achChanged){ saveGames(); render(); }
+  if (changed || added || achChanged){ saveGames(); render(); }
 }
 
 const steamDlg = $('steamDlg');
@@ -3173,14 +3193,15 @@ async function openSteamSync(){
     return;
   }
   steamPlan = matchSteam(data.games);
+  const pref = steamImportPref();
   const total = Math.round(data.games.reduce((a, g) => a + g.hours, 0));
   const played = steamPlan.others.filter(g => g.hours > 0).length;
   $('steamBody').innerHTML = `
     <p style="margin:0">Found <b>${data.count}</b> games on your Steam with <b>${total.toLocaleString()}</b> hours ✓</p>
     <div class="sync-opts">
       <label class="check"><input type="checkbox" checked disabled> Update hours on <b>&nbsp;${steamPlan.matched.length}&nbsp;</b> games you already track</label>
-      <label class="check"><input type="checkbox" id="steamAdd" ${games.length ? '' : 'checked'}> Also add my other Steam games</label>
-      <label class="check" style="padding-left:26px"><input type="checkbox" id="steamPlayedOnly" checked> Only ones I've played&nbsp;<span class="meta" id="steamAddCount">(${played} ${played === 1 ? 'game' : 'games'})</span></label>
+      <label class="check"><input type="checkbox" id="steamAdd" ${!games.length || (pref && pref.all) ? 'checked' : ''}> Also add my other Steam games, and new ones I buy later</label>
+      <label class="check" style="padding-left:26px"><input type="checkbox" id="steamPlayedOnly" ${pref && pref.playedOnly ? 'checked' : ''}> Only ones I've played&nbsp;<span class="meta" id="steamAddCount">(${(pref && pref.playedOnly) ? played : steamPlan.others.length} ${((pref && pref.playedOnly) ? played : steamPlan.others.length) === 1 ? 'game' : 'games'})</span></label>
     </div>
     <p class="hint">Steam hours can't be edited by hand, so they show as verified ✓ on your profile. PvP games like CS2 go to the PvP tab automatically.</p>`;
   const count = () => { const n = $('steamPlayedOnly').checked ? played : steamPlan.others.length; $('steamAddCount').textContent = `(${n} ${n === 1 ? 'game' : 'games'})`; };
@@ -3191,19 +3212,9 @@ $('steamGo').addEventListener('click', () => {
   if (!steamPlan) return;
   const changed = applySteamHours(steamPlan.matched);
   let added = 0;
-  if ($('steamAdd') && $('steamAdd').checked){
-    const playedOnly = $('steamPlayedOnly').checked;
-    const now = Date.now();
-    steamPlan.others.filter(sg => !playedOnly || sg.hours > 0)
-      .sort((a, b) => b.hours - a.hours)
-      .forEach((sg, i) => {
-        const pvp = looksPvp(sg.name, '');
-        const status = sg.recent > 0 ? (pvp ? 'main' : 'playing') : (pvp ? 'casual' : 'backlog');
-        games.push(normalizeGame({ title:sg.name, type:pvp ? 'pvp' : 'story', status, platform:'Steam', hours:sg.hours,
-          steamAppId:sg.appid, verified:true, cover:steamHeader(sg.appid), added:now - i }));
-        added++;
-      });
-  }
+  const all = !!($('steamAdd') && $('steamAdd').checked), playedOnly = $('steamPlayedOnly').checked;
+  setSteamImportPref({ all, playedOnly });
+  if (all) added = addSteamGames(steamPlan.others, playedOnly);
   saveGames();
   steamDlg.close();
   steamPlan = null;
