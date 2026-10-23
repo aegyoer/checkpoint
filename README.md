@@ -58,7 +58,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 ˚₊ Badges you earn as you play<br>
 ˚₊ Gamer tags that open your U.GG, Tracklock and Steam pages<br>
 ˚₊ Connect Steam for verified hours that can't be faked<br>
-˚₊ Steam achievements tracked for every game 🏆<br>
+˚₊ Steam achievements tracked for every game, 100% ones turn ✦ Perfected<br>
 ˚₊ Live "now playing" from Steam and Discord<br>
 ˚₊ Alt accounts, and a library anyone can browse from your profile<br>
 ˚₊ Friends and followers, you choose what's shown
@@ -107,7 +107,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 | | 📚 Library | ⚔️ PvP |
 |---|---|---|
 | **For** | games you can finish | competitive & live-service games |
-| **Statuses** | backlog · playing · completed · dropped · wishlist | main game · casual · on a break · retired |
+| **Statuses** | backlog · playing · completed · ✦ perfected · dropped · wishlist | main game · casual · on a break · retired |
 | **Track** | checklists and % complete | current rank, peak rank and main |
 
 ## Roadmap (๑˃ᴗ˂)ﻭ

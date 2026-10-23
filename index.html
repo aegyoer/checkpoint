@@ -34,7 +34,7 @@
   --muted:color-mix(in srgb, var(--text) 60%, var(--bg));
 
   /* Status colors */
-  --c-backlog:#a0a8b8; --c-playing:#5ab0ff; --c-completed:#7cf29c;
+  --c-backlog:#a0a8b8; --c-playing:#5ab0ff; --c-completed:#7cf29c; --c-perfected:#ffd76a;
   --c-dropped:#ff6b6b; --c-wishlist:#ffc857;
 }
 *{box-sizing:border-box}
@@ -153,7 +153,7 @@ button.lib-item:hover .mini-cover{transform:translateY(-3px)}
 .cover span,.d-cover span,.mini-cover span,.rank-thumb span{font-family:var(--font-head);font-size:2rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 2px 12px rgba(0,0,0,.3)}
 .badge{position:absolute;top:8px;left:8px;font-style:normal;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);z-index:1}
 .clipcount{font-style:normal;position:absolute;top:8px;right:8px;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;z-index:1}
-.s-backlog{color:var(--c-backlog)} .s-playing{color:var(--c-playing)} .s-completed{color:var(--c-completed)}
+.s-backlog{color:var(--c-backlog)} .s-playing{color:var(--c-playing)} .s-completed{color:var(--c-completed)} .s-perfected{color:var(--c-perfected);text-shadow:0 0 8px rgba(255,215,106,.55)}
 .s-dropped{color:var(--c-dropped)} .s-wishlist{color:var(--c-wishlist)}
 .s-main{color:var(--c-completed)} .s-casual{color:var(--c-playing)} .s-break{color:var(--c-wishlist)} .s-retired{color:var(--c-backlog)}
 .card-body{padding:12px 14px 14px;display:grid;gap:2px}
@@ -1129,7 +1129,8 @@ const GITHUB_REPO = 'aegyoer/checkpoint';
 const STEAM_FN = `${SUPABASE_URL}/functions/v1/steam`;
 const steamHeader = appid => `https://cdn.cloudflare.steamstatic.com/steam/apps/${Number(appid)}/header.jpg`;
 
-const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Completed', dropped:'Dropped', wishlist:'Wishlist' };
+const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Completed', perfected:'✦ Perfected', dropped:'Dropped', wishlist:'Wishlist' };
+const isDone = g => g.status === 'completed' || g.status === 'perfected';   // perfected counts as completed too
 const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', retired:'Retired' };
 const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
 const GAMER_TAGS = [['steam','Steam'],['league','League of Legends'],['valorant','Valorant'],['deadlock','Deadlock'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
@@ -1449,7 +1450,7 @@ function renderStats(){
   const hours = Math.round(list.reduce((s, g) => s + g.hours, 0));
   const items = mode() === 'pvp'
     ? [['PvP games', list.length], ['Main games', list.filter(g => g.status === 'main').length], ['Hours played', hours], ['Clips', list.reduce((s, g) => s + g.clips.length, 0)]]
-    : [['Games tracked', list.length], ['Completed', list.filter(g => g.status === 'completed').length], ['In backlog', list.filter(g => g.status === 'backlog').length], ['Hours played', hours]];
+    : [['Games tracked', list.length], ['Completed', list.filter(isDone).length], ['In backlog', list.filter(g => g.status === 'backlog').length], ['Hours played', hours]];
   $('stats').innerHTML = items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
 }
 
@@ -2029,7 +2030,7 @@ function buildSnapshot(p = profile){
 function buildSnapshotRaw(p){
   const story = games.filter(g => g.type === 'story'), pvp = games.filter(g => g.type === 'pvp');
   const on = k => p.sections.some(s => s.key === k && s.on);
-  const completed = story.filter(g => g.status === 'completed').length;
+  const completed = story.filter(isDone).length;
   const finishable = story.filter(g => g.status !== 'wishlist').length;
   return {
     v:1, name:p.name, handle:p.handle, status:p.status, bio:p.bio,
@@ -3134,6 +3135,14 @@ function matchSteam(list){
   }
   return { matched, others };
 }
+// 100% of a game's Steam achievements = Perfected (and back to Completed if new ones are added)
+function autoPerfect(g){
+  if (g.type !== 'story' || !g.ach || !g.ach.total) return false;
+  const all = g.ach.done >= g.ach.total;
+  if (all && g.status !== 'perfected'){ g.status = 'perfected'; return true; }
+  if (!all && g.status === 'perfected' && g.verified){ g.status = 'completed'; return true; }
+  return false;
+}
 function applySteamHours(matched){
   let changed = 0;
   for (const [g, sg] of matched){
@@ -3250,6 +3259,7 @@ async function refreshAchievements(){
   for (const g of games){
     const a = g.steamAppId && sums[g.steamAppId];
     if (a && (!g.ach || g.ach.done !== a.done || g.ach.total !== a.total)){ g.ach = a; n++; }
+    if (autoPerfect(g)) n++;
   }
   return n;
 }
@@ -3273,7 +3283,7 @@ async function paintAchievements(g){
                list:(Array.isArray(j.list) ? j.list : []).map(a => ({ name:String(a.name || ''), desc:String(a.desc || ''), icon:safeUrl(a.icon), done:!!a.done, at:Number(a.at) || 0 })) };
       achCache[g.steamAppId] = data;
       if (data.total && (!g.ach || g.ach.done !== data.done || g.ach.total !== data.total)){
-        g.ach = { done:data.done, total:data.total }; saveGames(); render();
+        g.ach = { done:data.done, total:data.total }; autoPerfect(g); saveGames(); render();
       }
     } catch(err){
       $('dAchText').textContent = "Couldn't load right now";
@@ -3498,9 +3508,9 @@ function renderLibrary(){
   }
   fillSelect($('libSort'), [['recent','Recently added'], ['hours','Most hours'], ['ach','Most achievements'], ['title','A → Z']]);
   $('libSort').value = ['recent','hours','ach','title'].includes(st.sort) ? st.sort : 'recent';
-  const chips = [['all','All'], ['story','Completable'], ['pvp','PvP'], ['playing','Playing'], ['completed','Completed'], ['backlog','Backlog']];
+  const chips = [['all','All'], ['story','Completable'], ['pvp','PvP'], ['playing','Playing'], ['completed','Completed'], ['perfected','✦ Perfected'], ['backlog','Backlog']];
   $('libChips').innerHTML = chips.map(([k, l]) => `<button class="chip ${st.filter === k ? 'active' : ''}" data-libf="${k}">${l}</button>`).join('');
-  const match = g => st.filter === 'all' || (st.filter === 'story' || st.filter === 'pvp' ? g.type === st.filter : g.status === st.filter || (st.filter === 'playing' && g.status === 'main'));
+  const match = g => st.filter === 'all' || (st.filter === 'story' || st.filter === 'pvp' ? g.type === st.filter : g.status === st.filter || (st.filter === 'playing' && g.status === 'main') || (st.filter === 'completed' && g.status === 'perfected'));
   const achPct = g => g.ach ? g.ach[0] / g.ach[1] : -1;
   const sorters = { recent:(a, b) => b.added - a.added, hours:(a, b) => b.hours - a.hours, ach:(a, b) => achPct(b) - achPct(a) || b.hours - a.hours, title:(a, b) => a.title.localeCompare(b.title) };
   const list = lib.filter(g => match(g) && g.title.toLowerCase().includes(st.q)).sort(sorters[$('libSort').value]);
