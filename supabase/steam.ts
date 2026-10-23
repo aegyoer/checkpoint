@@ -106,6 +106,17 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Game search on the Steam store (used by "Add a game"; no Steam key needed)
+    if (action === "search") {
+      const term = (q.get("q") ?? "").trim().slice(0, 80);
+      if (term.length < 2) return json({ items: [] });
+      const r = await fetch(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`);
+      const d = r.ok ? await r.json().catch(() => null) : null;
+      const items = (d?.items ?? []).filter((i: any) => i && i.type === "app" && Number.isInteger(i.id))
+        .slice(0, 8).map((i: any) => ({ appid: i.id, name: String(i.name ?? "").slice(0, 120) }));
+      return json({ items }, 200, 3600);
+    }
+
     if (!STEAM_KEY) return json({ error: "STEAM_API_KEY secret is not set" }, 500);
 
     // What someone is playing right now
