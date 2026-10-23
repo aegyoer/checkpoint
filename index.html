@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkpoint – Game Backlog, PvP & Completion Tracker</title>
+<meta name="description" content="Track your backlog, 100% your games with checklists, log your PvP ranks and clips, and build a profile that's all yours.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Rajdhani:wght@500;700&family=Nunito:wght@400;600;800&family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&family=Fraunces:wght@600;800&display=swap" rel="stylesheet">
+
+<!--
+  ================================================================
+  STYLES — how the site looks.
+  Most colors come from the Customize page, so you rarely need to
+  touch these. The variables in :root are the default theme.
+  ================================================================
+-->
+<style>
+:root{
+  --bg:#0d0f14;
+  --panel:#161a22;
+  --text:#e8ebf1;
+  --accent:#7cf29c;
+  --accent-ink:#0b1a10;
+  --radius:14px;
+  --card-min:200px;
+  --font-head:"Space Grotesk",sans-serif;
+  --font-body:"Inter",sans-serif;
+
+  /* These are mixed automatically from the colors above */
+  --panel-2:color-mix(in srgb, var(--panel) 90%, var(--text));
+  --line:color-mix(in srgb, var(--panel) 82%, var(--text));
+  --muted:color-mix(in srgb, var(--text) 60%, var(--bg));
+
+  /* Status colors */
+  --c-backlog:#a0a8b8; --c-playing:#5ab0ff; --c-completed:#7cf29c;
+  --c-dropped:#ff6b6b; --c-wishlist:#ffc857;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--font-body);line-height:1.5;min-height:100vh;
+  display:flex;flex-direction:column;
+}
+body[data-bg="glow"]{
+  background:radial-gradient(1100px 520px at 50% -12%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%) no-repeat, var(--bg);
+}
+body[data-bg="grid"]{
+  background-color:var(--bg);
+  background-image:linear-gradient(color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px),
+                   linear-gradient(90deg, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px);
+  background-size:34px 34px;
+}
+body[data-bg="aurora"]{
+  background:radial-gradient(700px 400px at 10% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%) no-repeat,
+             radial-gradient(700px 400px at 95% 10%, color-mix(in srgb, var(--c-playing) 16%, transparent), transparent 70%) no-repeat,
+             var(--bg);
+}
+main{flex:1;width:100%;min-width:0}
+.grid > *,.stats > *,.minis > *,.clips > *,.ranks > *{min-width:0}
+h1,h2,h3,.logo{font-family:var(--font-head)}
+body[data-head="pixel"] h1{font-size:1.15rem;line-height:1.6}
+body[data-head="pixel"] h2{font-size:.85rem;line-height:1.7}
+body[data-head="pixel"] h3{font-size:.72rem;line-height:1.7}
+body[data-head="pixel"] .logo{font-size:.85rem}
+body[data-head="pixel"] .stat b{font-family:var(--font-body)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none !important}
+
+/* ---------- Header + tabs ---------- */
+.site-head{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 82%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:16px;padding:12px 16px}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.3rem;font-weight:700;letter-spacing:-.02em;color:var(--text);text-decoration:none;flex-shrink:0}
+.logo-mark{width:32px;height:32px;border-radius:calc(var(--radius) * .6);background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-size:1rem}
+.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{color:var(--muted);text-decoration:none;padding:7px 12px;border-radius:999px;font-weight:500;font-size:.92rem;white-space:nowrap}
+.tabs a:hover{color:var(--text)}
+.tabs a.active{background:var(--panel-2);color:var(--text)}
+
+/* ---------- Buttons & form fields ---------- */
+.btn{border:1px solid var(--line);background:var(--panel-2);padding:9px 14px;border-radius:calc(var(--radius) * .7);cursor:pointer;font-weight:500;font-size:.92rem;white-space:nowrap;text-decoration:none;color:var(--text);display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--c-dropped)}
+.btn.small{padding:5px 9px;font-size:.82rem}
+input[type=text],input[type=url],input[type=number],input[type=search],select,textarea{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:9px 12px;outline:none
+}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:4px}
+label.check{display:flex;align-items:center;gap:8px;color:var(--text);font-size:.92rem;margin:0;cursor:pointer}
+label.check input{width:17px;height:17px;accent-color:var(--accent)}
+.hint{color:var(--muted);font-size:.8rem;margin:0}
+.meta{color:var(--muted);font-size:.8rem}
+
+/* Two-option toggle (Completable / PvP) */
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:3px;gap:3px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{margin:0;text-align:center;padding:8px;border-radius:calc(var(--radius) * .55);cursor:pointer;color:var(--muted);font-size:.88rem;font-weight:500}
+.seg input:checked + label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- Page headings ---------- */
+.view-head{padding:28px 0 16px}
+.view-head h1{margin:0;font-size:1.8rem;letter-spacing:-.02em}
+.view-head .sub{margin:4px 0 0;color:var(--muted);max-width:640px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.stat b{display:block;font-family:var(--font-head);font-size:1.6rem;line-height:1.15}
+.stat span{color:var(--muted);font-size:.82rem}
+
+/* ---------- Toolbar + filter chips ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;padding:20px 0 12px;flex-wrap:wrap}
+.toolbar .search{flex:1;min-width:180px}
+.toolbar select{width:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:18px}
+.chip{border:1px solid var(--line);background:transparent;padding:6px 12px;border-radius:999px;cursor:pointer;font-size:.85rem;color:var(--muted)}
+.chip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.chip small{opacity:.7;margin-left:5px}
+
+/* ---------- Game cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-min),1fr));gap:14px;padding-bottom:60px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,border-color .12s}
+.card:hover,.card:focus-visible{transform:translateY(-3px);border-color:var(--accent)}
+.cover,.d-cover,.mini-cover,.rank-thumb,.clip-thumb{position:relative;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(135deg,hsl(var(--h) 70% 45%),hsl(calc(var(--h) + 50) 70% 25%))}
+.cover{aspect-ratio:16/10}
+.cover img,.d-cover img,.mini-cover img,.rank-thumb img,.clip-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover span,.d-cover span,.mini-cover span,.rank-thumb span{font-family:var(--font-head);font-size:2rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.badge{position:absolute;top:8px;left:8px;font-style:normal;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);z-index:1}
+.clipcount{font-style:normal;position:absolute;top:8px;right:8px;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;z-index:1}
+.s-backlog{color:var(--c-backlog)} .s-playing{color:var(--c-playing)} .s-completed{color:var(--c-completed)}
+.s-dropped{color:var(--c-dropped)} .s-wishlist{color:var(--c-wishlist)}
+.s-main{color:var(--c-completed)} .s-casual{color:var(--c-playing)} .s-break{color:var(--c-wishlist)} .s-retired{color:var(--c-backlog)}
+.card-body{padding:12px 14px 14px;display:grid;gap:2px}
+.card-body h3{margin:0;font-size:1rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stars{color:var(--c-wishlist);font-size:.85rem;letter-spacing:1px}
+.rank{font-family:var(--font-head);font-weight:700;color:var(--accent);font-size:.95rem}
+.bar{height:6px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .2s}
+
+.empty{grid-column:1/-1;text-align:center;padding:56px 20px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted)}
+.empty h2{color:var(--text);margin:0 0 6px}
+
+/* ---------- Pop-up windows ---------- */
+dialog{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:calc(var(--radius) + 4px);padding:0;width:min(580px,calc(100vw - 24px));max-height:calc(100vh - 32px)}
+dialog.wide{width:min(760px,calc(100vw - 24px))}
+dialog::backdrop{background:rgba(5,7,10,.72);backdrop-filter:blur(3px)}
+dialog > form{display:contents}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dlg-head h2{margin:0;font-size:1.2rem}
+.x{all:unset;cursor:pointer;color:var(--muted);font-size:1.4rem;line-height:1;padding:4px 9px;border-radius:8px}
+.x:hover{background:var(--panel-2);color:var(--text)}
+.x.on-banner{position:absolute;top:10px;right:10px;z-index:3;background:rgba(0,0,0,.5);color:#fff}
+.dlg-body{padding:18px 20px;display:grid;gap:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.dlg-foot .left{margin-right:auto}
+.section-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.section-title h3{margin:0;font-size:1rem}
+
+/* Game search suggestions */
+.suggest-wrap{position:relative}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);box-shadow:0 18px 40px rgba(0,0,0,.4);overflow:hidden;max-height:340px;overflow-y:auto}
+.sug{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;cursor:pointer}
+.sug:hover,.sug.active{background:var(--panel-2)}
+.sug img,.sug .sug-ph{width:64px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--panel-2)}
+.sug b{display:block;font-weight:600;font-size:.92rem}
+.sug small{color:var(--muted);font-size:.76rem}
+.sug-msg{padding:12px;color:var(--muted);font-size:.85rem}
+.picked{display:flex;gap:12px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:8px}
+.picked img{width:96px;height:54px;object-fit:cover;border-radius:6px}
+.picked div{flex:1;min-width:0}
+.picked b{display:block}
+
+/* Game detail banner */
+.d-banner{position:relative}
+.d-cover{height:190px}
+.d-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,var(--panel))}
+.d-title{position:absolute;left:20px;right:60px;bottom:10px;z-index:2}
+.d-title h2{margin:0;font-size:1.6rem;line-height:1.15}
+.d-title small{color:var(--muted);font-size:.8rem}
+.fav-btn.on{color:var(--c-wishlist);border-color:var(--c-wishlist)}
+
+/* Checklist */
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.checklist li{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--panel-2);border-radius:calc(var(--radius) * .7)}
+.checklist input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.checklist li span{flex:1;word-break:break-word}
+.checklist li.done span{color:var(--muted);text-decoration:line-through}
+.del{all:unset;cursor:pointer;color:var(--muted);padding:0 4px;opacity:.6}
+.del:hover{color:var(--c-dropped);opacity:1}
+.inline-form{display:flex;gap:8px}
+
+/* Clips */
+.clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.clip{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px}
+.clip-thumb{aspect-ratio:16/9;border-radius:calc(var(--radius) * .7)}
+.clip-thumb .play{position:relative;z-index:1;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:.95rem;transition:transform .12s}
+.clip:hover .play{transform:scale(1.12);background:var(--accent);color:var(--accent-ink)}
+.clip-thumb .src{position:absolute;left:6px;bottom:6px;z-index:1;font-style:normal;font-size:.68rem;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff}
+.clip-title{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clip-form{display:grid;grid-template-columns:2fr 1fr auto;gap:8px}
+.player{aspect-ratio:16/9;background:#000;display:grid;place-items:center}
+.player iframe,.player video{width:100%;height:100%;border:0;display:block}
+.player-msg{color:#cfd3da;padding:24px;text-align:center;max-width:420px}
+
+/* ---------- Profile page ---------- */
+.p-card{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--radius) + 4px);overflow:hidden;margin-top:24px}
+.p-banner{height:220px;position:relative;background:linear-gradient(120deg,var(--accent),color-mix(in srgb, var(--accent) 35%, var(--bg)) 60%, var(--bg))}
+.p-banner.b-solid{background:var(--accent)}
+.p-banner img{width:100%;height:100%;object-fit:cover;display:block}
+.p-main{display:flex;align-items:flex-start;gap:16px;padding:0 24px;margin-top:-56px;position:relative;flex-wrap:wrap}
+.p-avatar{width:120px;height:120px;border:5px solid var(--panel);background:var(--panel-2);display:grid;place-items:center;overflow:hidden;flex-shrink:0;border-radius:50%}
+.p-avatar.shape-rounded{border-radius:calc(var(--radius) + 10px)}
+.p-avatar.shape-square{border-radius:6px}
+.p-avatar.shape-hex{border-radius:0;border:none;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%)}
+.p-avatar img{width:100%;height:100%;object-fit:cover}
+.p-avatar span{font-family:var(--font-head);font-size:2.4rem;font-weight:700;color:var(--accent)}
+.p-id{flex:1;min-width:180px;padding-top:64px}
+.p-id h1{margin:0;font-size:1.8rem;line-height:1.15;word-break:break-word}
+.p-status{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:.85rem;color:var(--text);background:var(--panel-2);padding:3px 10px;border-radius:99px}
+.p-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.p-actions{padding-top:68px}
+.p-bio{margin:14px 24px 0;white-space:pre-line;max-width:720px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px 0}
+.tag{all:unset;cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:calc(var(--radius) * .7);padding:6px 10px;font-size:.85rem;display:flex;gap:6px;align-items:baseline}
+.tag:hover{border-color:var(--accent)}
+.tag small{color:var(--muted);font-size:.72rem}
+.p-card > :last-child{margin-bottom:22px}
+.p-sec{margin-top:26px}
+.p-sec h2{font-size:1.15rem;margin:0 0 12px}
+.p-stats{grid-template-columns:repeat(6,1fr)}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.mini{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:3px}
+.mini-cover{aspect-ratio:3/4;border-radius:var(--radius);transition:transform .12s}
+.mini:hover .mini-cover{transform:translateY(-3px)}
+.mini-t{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ranks{display:grid;gap:8px}
+.rank-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
+.rank-row:hover{border-color:var(--accent)}
+.rank-thumb{width:72px;height:44px;border-radius:calc(var(--radius) * .5);flex-shrink:0}
+.rank-thumb span{font-size:1rem}
+.rank-row > div:nth-child(2){flex:1;min-width:0}
+.rank-row b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-vals{display:flex;gap:18px;text-align:right}
+.rank-vals small{display:block;color:var(--muted);font-size:.72rem}
+.rank-vals b{font-family:var(--font-head);color:var(--accent)}
+
+/* Profile editor */
+.img-pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.img-prev{width:64px;height:64px;border-radius:12px;background:var(--panel-2) center/cover;border:1px solid var(--line);flex-shrink:0}
+.img-prev.wide{width:150px;height:50px}
+.sec-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.sec-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel-2);padding:6px 6px 6px 12px;border-radius:calc(var(--radius) * .7)}
+.sec-list span{display:flex;gap:4px}
+.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- Customize page ---------- */
+.cz{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;padding-bottom:60px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:14px}
+.panel h2{margin:0;font-size:1.05rem}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.preset{all:unset;box-sizing:border-box;cursor:pointer;border:2px solid var(--line);border-radius:calc(var(--radius) * .7);padding:8px;background:var(--pb);color:var(--pt);font-size:.82rem;font-weight:600;display:grid;gap:6px}
+.preset.active{border-color:var(--accent)}
+.preset .sw{display:flex;gap:4px}
+.preset .sw i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(128,128,128,.4)}
+.colors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.colors input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-radius:calc(var(--radius) * .7);background:var(--panel-2);padding:3px;cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.range-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.range-row output{color:var(--muted);font-size:.82rem;min-width:44px;text-align:right}
+.cz-side{display:grid;gap:18px;position:sticky;top:76px}
+.preview-card{max-width:240px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Toast message */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:500;pointer-events:none;transition:.2s;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36px;border-top:1px solid var(--line)}
+
+/* ---------- Phone layout ---------- */
+@media (max-width:820px){
+  .cz{grid-template-columns:1fr}
+  .cz-side{position:static}
+  .p-stats{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:640px){
+  .top{flex-wrap:wrap;gap:10px}
+  .tabs{order:3;flex-basis:100%}
+  .logo{flex:1}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .p-stats{grid-template-columns:repeat(2,1fr)}
+  .row,.row3,.tag-grid,.clip-form{grid-template-columns:1fr}
+  .colors{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cover span{font-size:1.5rem}
+  .p-banner{height:150px}
+  .p-avatar{width:96px;height:96px}
+  .p-main{padding:0 16px;margin-top:-48px}
+  .p-id{flex-basis:100%;padding-top:0}
+  .p-actions{position:absolute;right:16px;top:60px;padding:0}
+  .p-bio,.tags{margin-left:16px;margin-right:16px;padding-left:0;padding-right:0}
+  .rank-row{gap:10px;padding:10px}
+  .rank-thumb{width:52px;height:36px}
+  .rank-vals{gap:10px}
+  .rank-vals b{font-size:.85rem}
+  .d-cover{height:150px}
+}
+</style>
+</head>
+<body data-bg="glow">
+
+<!--
+  ================================================================
+  PAGE LAYOUT — what's on the page.
+  ================================================================
+-->
+<header class="site-head">
+  <div class="top wrap">
+    <a class="logo" href="#library"><div class="logo-mark">✓</div><span id="siteName">Checkpoint</span></a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#library" data-view="library">Library</a>
+      <a href="#pvp" data-view="pvp">PvP</a>
+      <a href="#profile" data-view="profile">Profile</a>
+      <a href="#customize" data-view="customize">Customize</a>
+    </nav>
+    <button class="btn primary" id="addBtn">+ Add game</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- LIBRARY + PVP (they share this layout) -->
+  <section id="view-games">
+    <div class="view-head">
+      <h1 id="gamesTitle"></h1>
+      <p class="sub" id="gamesSub"></p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <input type="search" class="search" id="search" placeholder="Search your games…" aria-label="Search games">
+      <select id="sort" aria-label="Sort games"></select>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- PROFILE (filled in by the script) -->
+  <section id="view-profile" hidden></section>
+
+  <!-- CUSTOMIZE -->
+  <section id="view-customize" hidden>
+    <div class="view-head">
+      <h1>Customize</h1>
+      <p class="sub">Make it yours. Changes apply instantly and are saved in this browser.</p>
+    </div>
+    <div class="cz">
+      <div style="display:grid;gap:18px">
+        <div class="panel">
+          <h2>Theme presets</h2>
+          <div class="presets" id="presets"></div>
+        </div>
+        <div class="panel">
+          <h2>Colors</h2>
+          <div class="colors">
+            <div><label for="cBg">Background</label><input type="color" id="cBg"></div>
+            <div><label for="cPanel">Panels</label><input type="color" id="cPanel"></div>
+            <div><label for="cText">Text</label><input type="color" id="cText"></div>
+            <div><label for="cAccent">Accent</label><input type="color" id="cAccent"></div>
+          </div>
+          <div>
+            <label for="cBgEffect">Background effect</label>
+            <select id="cBgEffect">
+              <option value="solid">Solid</option>
+              <option value="glow">Accent glow</option>
+              <option value="aurora">Aurora</option>
+              <option value="grid">Grid</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Fonts & shape</h2>
+          <div class="row">
+            <div><label for="cHead">Heading font</label><select id="cHead"></select></div>
+            <div><label for="cBody">Body font</label><select id="cBody"></select></div>
+          </div>
+          <div>
+            <label for="cRadius">Corner roundness</label>
+            <div class="range-row"><input type="range" id="cRadius" min="0" max="26" step="1"><output id="cRadiusOut"></output></div>
+          </div>
+          <div>
+            <label for="cCard">Card size</label>
+            <div class="range-row"><input type="range" id="cCard" min="150" max="300" step="10"><output id="cCardOut"></output></div>
+          </div>
+          <label class="check"><input type="checkbox" id="cCovers"> Show game banners on cards</label>
+          <label class="check"><input type="checkbox" id="cRatings"> Show star ratings on cards</label>
+          <div><button class="btn" id="cReset">Reset to default theme</button></div>
+        </div>
+      </div>
+      <div class="cz-side">
+        <div class="panel">
+          <h2>Preview</h2>
+          <div class="card preview-card" tabindex="-1">
+            <div class="cover" style="--h:200"><span>CP</span><em class="badge s-playing">Playing</em></div>
+            <div class="card-body">
+              <h3>Your Next Favorite Game</h3>
+              <div class="meta">Steam · 12h</div>
+              <div class="stars">★★★★☆</div>
+              <div class="bar"><i style="width:64%"></i></div>
+              <div class="meta">64% complete</div>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn primary" tabindex="-1">Primary</button><button class="btn" tabindex="-1">Button</button><span class="chip active">Chip</span></div>
+        </div>
+        <div class="panel">
+          <h2>Your data</h2>
+          <p class="hint">Everything is stored in this browser only. Export a backup now and then, or to move to another device.</p>
+          <div class="btn-row">
+            <button class="btn" id="cExport">Export backup</button>
+            <button class="btn" id="cImport">Import backup</button>
+            <input type="file" id="cImportFile" accept=".json,application/json" hidden>
+          </div>
+          <div><button class="btn danger" id="cErase">Erase everything</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Your data stays in your browser · Back up from <a href="#customize">Customize</a> ·
+  Game info &amp; images from <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Pop-up: add / edit game -->
+<dialog id="formDlg">
+  <form id="gameForm" autocomplete="off">
+    <div class="dlg-head">
+      <h2 id="formTitle">Add a game</h2>
+      <button type="button" class="x" data-close aria-label="Close">×</button>
+    </div>
+    <div class="dlg-body">
+      <div class="seg" role="radiogroup" aria-label="Game type">
+        <input type="radio" name="fType" id="fTypeStory" value="story"><label for="fTypeStory">Completable</label>
+        <input type="radio" name="fType" id="fTypePvp" value="pvp"><label for="fTypePvp">PvP / endless</label>
+      </div>
+      <div>
+        <label for="fTitle">Game title</label>
+        <div class="suggest-wrap">
+          <input type="text" id="fTitle" required maxlength="120" placeholder="Start typing… e.g. Hollow Knight" aria-autocomplete="list">
+          <div class="suggest" id="fSuggest" hidden></div>
+        </div>
+        <p class="hint" id="fHint" style="margin-top:6px"></p>
+      </div>
+      <div class="picked" id="fPicked" hidden></div>
+      <div class="row">
+        <div><label for="fPlatform">Platform</label><select id="fPlatform"></select></div>
+        <div><label for="fStatus">Status</label><select id="fStatus"></select></div>
+      </div>
+      <div class="row">
+        <div><label for="fHours">Hours played</label><input type="number" id="fHours" min="0" step="0.5" placeholder="0"></div>
+        <div>
+          <label for="fRating">Your rating</label>
+          <select id="fRating">
+            <option value="0">No rating</option>
+            <option value="1">★</option><option value="2">★★</option><option value="3">★★★</option>
+            <option value="4">★★★★</option><option value="5">★★★★★</option>
+          </select>
+        </div>
+      </div>
+      <div id="fPvp" class="dlg-body" style="padding:0">
+        <div class="row">
+          <div><label for="fRank">Current rank</label><input type="text" id="fRank" maxlength="40" placeholder="e.g. Diamond 2"></div>
+          <div><label for="fPeak">Peak rank</label><input type="text" id="fPeak" maxlength="40" placeholder="e.g. Ascendant 1"></div>
+        </div>
+        <div><label for="fMain">Main (character, agent, role…)</label><input type="text" id="fMain" maxlength="60" placeholder="e.g. Jett / Support / Mercy"></div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" class="btn primary" id="formSubmit">Add game</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Pop-up: game details -->
+<dialog id="detailDlg" class="wide">
+  <button type="button" class="x on-banner" data-close aria-label="Close">×</button>
+  <div class="d-banner" id="dBanner"></div>
+  <div class="dlg-body">
+    <div class="row3">
+      <div><label for="dStatus">Status</label><select id="dStatus"></select></div>
+      <div><label>Details</label><div class="meta" id="dMeta" style="padding-top:9px"></div></div>
+      <button class="btn fav-btn" id="dFav"></button>
+    </div>
+
+    <div id="dStory" style="display:grid;gap:10px">
+      <div class="section-title"><h3>Completion checklist</h3><span class="meta" id="dProgressText"></span></div>
+      <div class="bar" style="margin:0"><i id="dBar"></i></div>
+      <ul class="checklist" id="dList"></ul>
+      <form class="inline-form" id="itemForm">
+        <input type="text" id="itemInput" placeholder="Add a goal, collectible, boss…" aria-label="New checklist item">
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <p class="hint">Tip: paste a list with one item per line to add them all at once.</p>
+    </div>
+
+    <div id="dPvp" style="display:grid;gap:10px">
+      <div class="section-title"><h3>Rank & main</h3><span class="meta">No "completed" here — it's never really over.</span></div>
+      <div class="row3" style="grid-template-columns:1fr 1fr 1fr">
+        <div><label for="dRank">Current rank</label><input type="text" id="dRank" maxlength="40"></div>
+        <div><label for="dPeak">Peak rank</label><input type="text" id="dPeak" maxlength="40"></div>
+        <div><label for="dMain">Main</label><input type="text" id="dMain" maxlength="60"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:10px">
+      <div class="section-title"><h3>Clips</h3><span class="meta">YouTube · Twitch · Streamable · video links</span></div>
+      <form class="clip-form" id="clipForm">
+        <input type="url" id="clipUrl" placeholder="Paste a clip link" aria-label="Clip link" required>
+        <input type="text" id="clipTitle" placeholder="Title (optional)" maxlength="80" aria-label="Clip title">
+        <button class="btn" type="submit">Add clip</button>
+      </form>
+      <div class="clips" id="dClips"></div>
+    </div>
+
+    <div>
+      <label for="dNotes">Notes</label>
+      <textarea id="dNotes" rows="3" placeholder="Thoughts, tips, where you left off…"></textarea>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn danger left" id="deleteBtn">Delete game</button>
+    <button class="btn" id="editBtn">Edit details</button>
+    <button class="btn primary" data-close>Done</button>
+  </div>
+</dialog>
+
+<!-- Pop-up: clip player -->
+<dialog id="clipDlg" class="wide">
+  <div class="dlg-head">
+    <h2 id="cTitle"></h2>
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+  </div>
+  <div class="player" id="cPlayer"></div>
+  <div class="dlg-foot">
+    <button class="btn danger left" id="cDelete">Remove clip</button>
+    <a class="btn" id="cLink" target="_blank" rel="noopener">Open original ↗</a>
+  </div>
+</dialog>
+
+<!-- Pop-up: edit profile -->
+<dialog id="profileDlg" class="wide">
+  <form id="profileForm" autocomplete="off">
+    <div class="dlg-head">
+      <h2>Edit profile</h2>
+      <button type="button" class="x" data-close aria-label="Close">×</button>
+    </div>
+    <div class="dlg-body">
+      <div class="row">
+        <div><label for="pName">Display name</label><input type="text" id="pName" maxlength="40"></div>
+        <div><label for="pHandle">Handle</label><input type="text" id="pHandle" maxlength="30" placeholder="without the @"></div>
+      </div>
+      <div><label for="pStatus">Status line</label><input type="text" id="pStatus" maxlength="60" placeholder="e.g. Grinding ranked this week"></div>
+      <div><label for="pBio">Bio</label><textarea id="pBio" rows="3" maxlength="400" placeholder="Tell people what you play…"></textarea></div>
+
+      <div class="row">
+        <div>
+          <label>Profile picture</label>
+          <div class="img-pick">
+            <div class="img-prev" id="pAvatarPrev"></div>
+            <button type="button" class="btn small" id="pAvatarBtn">Upload</button>
+            <button type="button" class="btn small" id="pAvatarDel">Remove</button>
+            <input type="file" id="pAvatarFile" accept="image/*" hidden>
+          </div>
+        </div>
+        <div>
+          <label for="pShape">Picture shape</label>
+          <select id="pShape">
+            <option value="circle">Circle</option>
+            <option value="rounded">Rounded</option>
+            <option value="square">Square</option>
+            <option value="hex">Hexagon</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Banner image</label>
+          <div class="img-pick">
+            <div class="img-prev wide" id="pBannerPrev"></div>
+            <button type="button" class="btn small" id="pBannerBtn">Upload</button>
+            <button type="button" class="btn small" id="pBannerDel">Remove</button>
+            <input type="file" id="pBannerFile" accept="image/*" hidden>
+          </div>
+        </div>
+        <div>
+          <label for="pBannerStyle">Banner style</label>
+          <select id="pBannerStyle">
+            <option value="gradient">Accent gradient</option>
+            <option value="solid">Solid accent</option>
+            <option value="image">My image</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin:0 0 8px;font-size:1rem">Gamer tags</h3>
+        <div class="tag-grid" id="pTags"></div>
+      </div>
+
+      <div>
+        <h3 style="margin:0 0 4px;font-size:1rem">Profile sections</h3>
+        <p class="hint" style="margin-bottom:8px">Turn sections on or off and change their order. Favorites are picked with the ☆ button on any game.</p>
+        <ul class="sec-list" id="pSections"></ul>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" class="btn primary">Save profile</button>
+    </div>
+  </form>
+</dialog>
+
+<!--
+  ================================================================
+  SCRIPT — how the site works.
+  ================================================================
+-->
+<script>
+/* ================================================================
+   1. SETTINGS YOU CAN CHANGE
+   ================================================================ */
+
+// Your free RAWG key goes between the quotes. It turns on the game
+// search that fills in banners and info. Get one at rawg.io/apidocs
+const RAWG_KEY = '';
+
+// Your site's name (shown in the top-left corner)
+const SITE_NAME = 'Checkpoint';
+
+const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Completed', dropped:'Dropped', wishlist:'Wishlist' };
+const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', retired:'Retired' };
+const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
+const GAMER_TAGS = [['steam','Steam'],['riot','Riot ID'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
+const SECTION_LABELS = { stats:'Stats', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips' };
+// Game-database tags that mean "this is probably a PvP game"
+const PVP_TAGS = ['pvp','online-pvp','competitive','esports','battle-royale','moba','team-based','hero-shooter'];
+
+const FONTS = {
+  inter:    ['Inter', '"Inter",sans-serif'],
+  grotesk:  ['Space Grotesk', '"Space Grotesk",sans-serif'],
+  rajdhani: ['Rajdhani (esports)', '"Rajdhani",sans-serif'],
+  nunito:   ['Nunito (friendly)', '"Nunito",sans-serif'],
+  mono:     ['JetBrains Mono', '"JetBrains Mono",monospace'],
+  serif:    ['Fraunces (serif)', '"Fraunces",serif'],
+  pixel:    ['Press Start 2P (pixel)', '"Press Start 2P",monospace']
+};
+const BODY_FONTS = ['inter','nunito','rajdhani','grotesk','mono'];
+
+const PRESETS = {
+  midnight: { name:'Midnight', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#7cf29c' },
+  neon:     { name:'Neon',     bg:'#0a0614', panel:'#160d28', text:'#f3ebff', accent:'#ff3df2' },
+  ocean:    { name:'Ocean',    bg:'#07121c', panel:'#0e2030', text:'#e3f2ff', accent:'#3fc6ff' },
+  sunset:   { name:'Sunset',   bg:'#170c0c', panel:'#251515', text:'#ffece2', accent:'#ff8a3d' },
+  forest:   { name:'Forest',   bg:'#0b130e', panel:'#142019', text:'#e6f2e8', accent:'#a3e635' },
+  gold:     { name:'Gold',     bg:'#0f0d08', panel:'#1c180f', text:'#f5ecd6', accent:'#f5c542' },
+  mono:     { name:'Mono',     bg:'#000000', panel:'#121212', text:'#f5f5f5', accent:'#ffffff' },
+  sakura:   { name:'Sakura',   bg:'#fff4f7', panel:'#ffffff', text:'#2a1a22', accent:'#e8508a' },
+  paper:    { name:'Paper',    bg:'#f3f3ef', panel:'#ffffff', text:'#1c1c1c', accent:'#2f6bff' }
+};
+
+const DEFAULT_THEME = {
+  preset:'midnight', ...PRESETS.midnight, headFont:'grotesk', bodyFont:'inter',
+  radius:14, cardSize:200, bgEffect:'glow', covers:true, showRatings:true
+};
+delete DEFAULT_THEME.name;
+
+const DEFAULT_PROFILE = {
+  name:'Player One', handle:'', status:'', bio:'',
+  avatar:'', banner:'', bannerStyle:'gradient', avatarShape:'circle',
+  tags:{}, favorites:[],
+  sections:[{key:'stats',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true}]
+};
+
+const KEYS = { games:'checkpoint-data-v1', profile:'checkpoint-profile-v1', theme:'checkpoint-theme-v1' };
+
+
+/* ================================================================
+   2. HELPERS
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// Only allow normal web links (blocks sneaky "javascript:" links)
+function safeUrl(u){
+  try { const x = new URL(String(u || '')); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; }
+  catch(e){ return ''; }
+}
+const isHex = c => /^#[0-9a-f]{6}$/i.test(c || '');
+function hueFor(str){ let h = 0; for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; }
+function initials(t){ return String(t).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'; }
+const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+function progressOf(g){
+  if (!g.checklist.length) return null;
+  return Math.round(g.checklist.filter(i => i.done).length / g.checklist.length * 100);
+}
+const statusMap = g => g.type === 'pvp' ? PVP_STATUS : STORY_STATUS;
+const findGame = id => games.find(g => g.id === id);
+// Ask RAWG for a smaller image so the site loads faster
+function sized(url, w){ return url && url.includes('media.rawg.io/media/games/') ? url.replace('/media/games/', `/media/resize/${w}/-/games/`) : url; }
+function fillSelect(sel, entries){ sel.innerHTML = entries.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''); }
+function luminance(hex){ const n = parseInt(hex.slice(1), 16); return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; }
+
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// If a smaller RAWG image fails, fall back to the full-size one
+document.addEventListener('error', e => {
+  const img = e.target;
+  if (img.tagName === 'IMG' && img.dataset.full && img.src !== img.dataset.full){ img.src = img.dataset.full; }
+  else if (img.tagName === 'IMG' && img.closest('main, dialog')){ img.remove(); }   // hide broken pictures
+}, true);
+
+
+/* ================================================================
+   3. SAVING & LOADING (everything lives in the browser)
+   ================================================================ */
+function load(key, fallback){
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch(e){ return fallback; }
+}
+let warnedStorage = false;
+function save(key, value){
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch(e){
+    if (!warnedStorage){ warnedStorage = true; alert('Your browser storage is full or blocked. Try smaller images, or export a backup.'); }
+    return false;
+  }
+}
+
+// These "normalize" functions fill in anything missing, so older
+// saves and imported backups always work.
+function normalizeGame(g){
+  const type = g.type === 'pvp' ? 'pvp' : 'story';
+  const statuses = type === 'pvp' ? PVP_STATUS : STORY_STATUS;
+  return {
+    id: String(g.id || uid()),
+    added: Number(g.added) || Date.now(),
+    type,
+    title: String(g.title || 'Untitled').slice(0, 120),
+    platform: String(g.platform || 'Other'),
+    status: statuses[g.status] ? g.status : Object.keys(statuses)[0],
+    hours: Math.max(0, Number(g.hours) || 0),
+    rating: Math.min(5, Math.max(0, Math.round(Number(g.rating) || 0))),
+    notes: String(g.notes || ''),
+    checklist: Array.isArray(g.checklist) ? g.checklist.filter(i => i && i.text).map(i => ({ id:String(i.id || uid()), text:String(i.text), done:!!i.done })) : [],
+    clips: Array.isArray(g.clips) ? g.clips.filter(c => c && safeUrl(c.url)).map(c => ({ id:String(c.id || uid()), url:safeUrl(c.url), title:String(c.title || ''), added:Number(c.added) || Date.now() })) : [],
+    cover: safeUrl(g.cover),
+    rawgId: g.rawgId || null,
+    genres: Array.isArray(g.genres) ? g.genres.map(String).slice(0, 4) : [],
+    released: String(g.released || ''),
+    rank: String(g.rank || ''),
+    peakRank: String(g.peakRank || ''),
+    main: String(g.main || '')
+  };
+}
+function normalizeProfile(p){
+  p = p || {};
+  const out = { ...DEFAULT_PROFILE, ...p };
+  out.tags = (p.tags && typeof p.tags === 'object') ? { ...p.tags } : {};
+  out.favorites = Array.isArray(p.favorites) ? p.favorites.map(String) : [];
+  const given = Array.isArray(p.sections) ? p.sections.filter(s => s && SECTION_LABELS[s.key]) : [];
+  const missing = DEFAULT_PROFILE.sections.filter(d => !given.some(s => s.key === d.key));
+  out.sections = [...given.map(s => ({ key:s.key, on:!!s.on })), ...missing.map(s => ({ ...s }))];
+  const okImg = v => (typeof v === 'string' && v.startsWith('data:image/')) ? v : safeUrl(v);
+  out.avatar = okImg(p.avatar); out.banner = okImg(p.banner);
+  if (!['gradient','solid','image'].includes(out.bannerStyle)) out.bannerStyle = 'gradient';
+  if (!['circle','rounded','square','hex'].includes(out.avatarShape)) out.avatarShape = 'circle';
+  return out;
+}
+function normalizeTheme(t){
+  const out = { ...DEFAULT_THEME, ...(t || {}) };
+  for (const k of ['bg','panel','text','accent']) if (!isHex(out[k])) out[k] = DEFAULT_THEME[k];
+  if (!FONTS[out.headFont]) out.headFont = DEFAULT_THEME.headFont;
+  if (!BODY_FONTS.includes(out.bodyFont)) out.bodyFont = DEFAULT_THEME.bodyFont;
+  out.radius = Math.min(26, Math.max(0, Number(out.radius) || 0));
+  out.cardSize = Math.min(300, Math.max(150, Number(out.cardSize) || 200));
+  if (!['solid','glow','aurora','grid'].includes(out.bgEffect)) out.bgEffect = 'glow';
+  out.covers = out.covers !== false; out.showRatings = out.showRatings !== false;
+  return out;
+}
+
+let games   = (load(KEYS.games, []) || []).filter(Boolean).map(normalizeGame);
+let profile = normalizeProfile(load(KEYS.profile, null));
+let theme   = normalizeTheme(load(KEYS.theme, null));
+const saveGames   = () => save(KEYS.games, games);
+const saveProfile = () => save(KEYS.profile, profile);
+const saveTheme   = () => save(KEYS.theme, theme);
+
+
+/* ================================================================
+   4. THEME (colors, fonts, shapes)
+   ================================================================ */
+function applyTheme(){
+  const s = document.documentElement.style;
+  s.setProperty('--bg', theme.bg);
+  s.setProperty('--panel', theme.panel);
+  s.setProperty('--text', theme.text);
+  s.setProperty('--accent', theme.accent);
+  s.setProperty('--accent-ink', luminance(theme.accent) > 0.6 ? '#0b0d10' : '#ffffff');
+  s.setProperty('--radius', theme.radius + 'px');
+  s.setProperty('--card-min', theme.cardSize + 'px');
+  s.setProperty('--font-head', FONTS[theme.headFont][1]);
+  s.setProperty('--font-body', FONTS[theme.bodyFont][1]);
+  s.colorScheme = luminance(theme.bg) > 0.5 ? 'light' : 'dark';
+  document.body.dataset.bg = theme.bgEffect;
+  document.body.dataset.head = theme.headFont;
+}
+
+
+/* ================================================================
+   5. PAGES (Library, PvP, Profile, Customize)
+   ================================================================ */
+const VIEWS = ['library','pvp','profile','customize'];
+let view = 'library';
+let filter = 'all', search = '', sortBy = 'recent';
+
+function route(){
+  const wanted = location.hash.slice(1);
+  const next = VIEWS.includes(wanted) ? wanted : 'library';
+  if (next !== view){ filter = 'all'; search = ''; $('search').value = ''; }
+  view = next;
+  document.querySelectorAll('.tabs a').forEach(a => {
+    const on = a.dataset.view === view;
+    a.classList.toggle('active', on);
+    on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current');
+  });
+  $('view-games').hidden = !(view === 'library' || view === 'pvp');
+  $('view-profile').hidden = view !== 'profile';
+  $('view-customize').hidden = view !== 'customize';
+  render();
+}
+window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+
+// Redraw whatever page is showing
+function render(){
+  if (view === 'library' || view === 'pvp') renderGamesView();
+  else if (view === 'profile') renderProfile();
+  else if (view === 'customize') syncCustomize();
+}
+
+/* ---------- Library & PvP ---------- */
+const mode = () => view === 'pvp' ? 'pvp' : 'story';
+const gamesOfMode = () => games.filter(g => g.type === mode());
+
+function renderGamesView(){
+  const pvp = mode() === 'pvp';
+  $('gamesTitle').textContent = pvp ? 'PvP & endless games' : 'Your library';
+  $('gamesSub').textContent = pvp
+    ? 'Competitive and live-service games. No "completed" button, just your rank, your main, and your best clips.'
+    : 'Games you can finish. Track your backlog and 100% them with checklists.';
+  const sorts = [['recent','Recently added'],['title','A → Z'],['rating','Highest rated'],['hours','Most hours']];
+  if (!pvp) sorts.push(['progress','Most complete']);
+  fillSelect($('sort'), sorts);
+  if (!sorts.some(s => s[0] === sortBy)) sortBy = 'recent';
+  $('sort').value = sortBy;
+  renderStats(); renderChips(); renderGrid();
+}
+
+function renderStats(){
+  const list = gamesOfMode();
+  const hours = Math.round(list.reduce((s, g) => s + g.hours, 0));
+  const items = mode() === 'pvp'
+    ? [['PvP games', list.length], ['Main games', list.filter(g => g.status === 'main').length], ['Hours played', hours], ['Clips', list.reduce((s, g) => s + g.clips.length, 0)]]
+    : [['Games tracked', list.length], ['Completed', list.filter(g => g.status === 'completed').length], ['In backlog', list.filter(g => g.status === 'backlog').length], ['Hours played', hours]];
+  $('stats').innerHTML = items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+
+function renderChips(){
+  const list = gamesOfMode();
+  const statuses = mode() === 'pvp' ? PVP_STATUS : STORY_STATUS;
+  const options = [['all', 'All'], ...Object.entries(statuses)];
+  $('chips').innerHTML = options.map(([k, label]) => {
+    const n = k === 'all' ? list.length : list.filter(g => g.status === k).length;
+    return `<button class="chip ${filter === k ? 'active' : ''}" data-filter="${k}">${label}<small>${n}</small></button>`;
+  }).join('');
+}
+
+function visibleGames(){
+  const sorters = {
+    recent:   (a, b) => b.added - a.added,
+    title:    (a, b) => a.title.localeCompare(b.title),
+    rating:   (a, b) => b.rating - a.rating,
+    hours:    (a, b) => b.hours - a.hours,
+    progress: (a, b) => (progressOf(b) ?? -1) - (progressOf(a) ?? -1)
+  };
+  return gamesOfMode()
+    .filter(g => (filter === 'all' || g.status === filter) && g.title.toLowerCase().includes(search))
+    .sort(sorters[sortBy] || sorters.recent);
+}
+
+// The picture at the top of a card (banner image, or colored initials)
+function coverHTML(g, cls, inner = '', force = false){
+  const img = g.cover && (force || theme.covers)
+    ? `<img src="${esc(sized(g.cover, 640))}" data-full="${esc(g.cover)}" alt="" loading="lazy">`
+    : `<span>${esc(initials(g.title))}</span>`;
+  return `<div class="${cls}" style="--h:${hueFor(g.title)}">${img}${inner}</div>`;
+}
+
+function cardHTML(g){
+  const badge = `<em class="badge s-${g.status}">${esc(statusMap(g)[g.status])}</em>`;
+  const clips = g.clips.length ? `<em class="clipcount">▶ ${g.clips.length}</em>` : '';
+  let extra = '';
+  if (g.type === 'pvp'){
+    if (g.rank) extra += `<div class="rank">${esc(g.rank)}</div>`;
+    if (g.main) extra += `<div class="meta">Main: ${esc(g.main)}</div>`;
+  } else {
+    const p = progressOf(g);
+    if (p !== null) extra = `<div class="bar"><i style="width:${p}%"></i></div><div class="meta">${p}% complete</div>`;
+  }
+  return `<button class="card" data-open="${esc(g.id)}">
+    ${coverHTML(g, 'cover', badge + clips)}
+    <div class="card-body">
+      <h3 title="${esc(g.title)}">${esc(g.title)}</h3>
+      <div class="meta">${esc(g.platform)}${g.hours ? ' · ' + g.hours + 'h' : ''}</div>
+      ${g.rating && theme.showRatings ? `<div class="stars">${stars(g.rating)}</div>` : ''}
+      ${extra}
+    </div>
+  </button>`;
+}
+
+function renderGrid(){
+  const pvp = mode() === 'pvp';
+  if (!gamesOfMode().length){
+    $('grid').innerHTML = `<div class="empty">
+      <h2>${pvp ? 'No PvP games yet' : 'Your library is empty'}</h2>
+      <p>${pvp ? 'Add the competitive games you play: Valorant, League, Overwatch, Rocket League…' : "Add the games you're playing, finished, or want to play."}</p>
+      <button class="btn primary" data-action="add">+ Add ${pvp ? 'a PvP' : 'your first'} game</button>
+    </div>`;
+    return;
+  }
+  const list = visibleGames();
+  $('grid').innerHTML = list.length ? list.map(cardHTML).join('')
+    : `<div class="empty"><p>No games match that search or filter.</p></div>`;
+}
+
+
+/* ================================================================
+   6. ADD / EDIT A GAME (with game-database search)
+   ================================================================ */
+const formDlg = $('formDlg');
+let editingId = null, formType = 'story', picked = null;
+
+fillSelect($('fPlatform'), PLATFORMS.map(p => [p, p]));
+
+function setFormType(t){
+  formType = t;
+  $('fTypeStory').checked = t === 'story';
+  $('fTypePvp').checked = t === 'pvp';
+  const keep = $('fStatus').value;
+  const statuses = t === 'pvp' ? PVP_STATUS : STORY_STATUS;
+  fillSelect($('fStatus'), Object.entries(statuses));
+  $('fStatus').value = statuses[keep] ? keep : Object.keys(statuses)[0];
+  $('fPvp').hidden = t !== 'pvp';
+}
+document.querySelectorAll('input[name=fType]').forEach(r => r.addEventListener('change', () => setFormType(r.value)));
+
+function defaultHint(){
+  return RAWG_KEY ? 'Start typing to search the game database. Pick a result to grab its banner and info.'
+                  : 'Game search is off. Add a free RAWG key at the top of the script to auto-fill banners and info.';
+}
+
+function openForm(id = null, type = 'story'){
+  editingId = id;
+  const g = id ? findGame(id) : null;
+  $('formTitle').textContent = g ? 'Edit game' : 'Add a game';
+  $('formSubmit').textContent = g ? 'Save changes' : 'Add game';
+  fillSelect($('fStatus'), []);
+  setFormType(g ? g.type : type);
+  $('fTitle').value = g ? g.title : '';
+  $('fPlatform').value = g ? g.platform : 'Steam';
+  $('fStatus').value = g ? g.status : $('fStatus').value;
+  $('fHours').value = g && g.hours ? g.hours : '';
+  $('fRating').value = String(g ? g.rating : 0);
+  $('fRank').value = g ? g.rank : '';
+  $('fPeak').value = g ? g.peakRank : '';
+  $('fMain').value = g ? g.main : '';
+  picked = g && (g.cover || g.rawgId) ? { name:g.title, cover:g.cover, rawgId:g.rawgId, genres:g.genres, released:g.released } : null;
+  renderPicked();
+  $('fHint').textContent = defaultHint();
+  hideSug();
+  formDlg.showModal();
+  $('fTitle').focus();
+}
+
+function renderPicked(){
+  const box = $('fPicked');
+  if (!picked){ box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  const info = [picked.released ? picked.released.slice(0, 4) : '', (picked.genres || []).join(', ')].filter(Boolean).join(' · ');
+  box.innerHTML = `${picked.cover ? `<img src="${esc(sized(picked.cover, 420))}" data-full="${esc(picked.cover)}" alt="">` : ''}
+    <div><b>${esc(picked.name)}</b><span class="meta">${esc(info || 'From the game database')}</span></div>
+    <button type="button" class="x" id="fUnpick" aria-label="Remove banner and info">×</button>`;
+}
+$('fPicked').addEventListener('click', e => { if (e.target.id === 'fUnpick'){ picked = null; renderPicked(); } });
+
+$('gameForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('fTitle').value.trim();
+  if (!title) return;
+  const data = {
+    type: formType, title,
+    platform: $('fPlatform').value, status: $('fStatus').value,
+    hours: $('fHours').value, rating: $('fRating').value,
+    rank: $('fRank').value.trim(), peakRank: $('fPeak').value.trim(), main: $('fMain').value.trim(),
+    cover: picked ? picked.cover : '', rawgId: picked ? picked.rawgId : null,
+    genres: picked ? picked.genres : [], released: picked ? picked.released : ''
+  };
+  if (editingId){
+    const i = games.findIndex(g => g.id === editingId);
+    games[i] = normalizeGame({ ...games[i], ...data });
+  } else {
+    games.push(normalizeGame({ ...data, id: uid(), added: Date.now() }));
+  }
+  saveGames();
+  formDlg.close();
+  if (!editingId){
+    const target = formType === 'pvp' ? 'pvp' : 'library';
+    if (view !== target){ location.hash = target; return; }
+    toast('Game added');
+  }
+  render();
+  if (detailDlg.open) renderDetail();
+});
+
+/* ---------- Game database search (RAWG) ---------- */
+const sugBox = $('fSuggest');
+let sugResults = [], sugIndex = -1, sugTimer = null, sugAbort = null;
+
+function hideSug(){ sugBox.hidden = true; sugBox.innerHTML = ''; sugIndex = -1; }
+function sugMsg(text){ sugBox.innerHTML = `<div class="sug-msg">${esc(text)}</div>`; sugBox.hidden = false; }
+
+$('fTitle').addEventListener('input', () => {
+  const q = $('fTitle').value.trim();
+  clearTimeout(sugTimer);
+  if (!RAWG_KEY || q.length < 2){ hideSug(); return; }
+  sugTimer = setTimeout(() => searchGames(q), 350);  // wait until you stop typing
+});
+
+async function searchGames(q){
+  if (sugAbort) sugAbort.abort();
+  sugAbort = new AbortController();
+  sugMsg('Searching…');
+  try {
+    const url = `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_KEY)}&search=${encodeURIComponent(q)}&search_precise=true&page_size=6`;
+    const res = await fetch(url, { signal: sugAbort.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    sugResults = data.results || [];
+    sugIndex = -1;
+    if (!sugResults.length) return sugMsg('No matches. You can still add it by name.');
+    sugBox.innerHTML = sugResults.map((r, i) => {
+      const img = safeUrl(r.background_image);
+      const info = [r.released ? r.released.slice(0, 4) : '', (r.parent_platforms || []).map(p => p.platform.name).join(', ')].filter(Boolean).join(' · ');
+      return `<button type="button" class="sug" data-i="${i}">
+        ${img ? `<img src="${esc(sized(img, 200))}" data-full="${esc(img)}" alt="">` : '<span class="sug-ph"></span>'}
+        <div><b>${esc(r.name)}</b><small>${esc(info)}</small></div>
+      </button>`;
+    }).join('');
+    sugBox.hidden = false;
+  } catch(err){
+    if (err.name === 'AbortError') return;
+    sugMsg("Couldn't reach the game database. Check your RAWG key.");
+  }
+}
+
+function pickResult(r){
+  const tags = (r.tags || []).map(t => t.slug);
+  picked = {
+    name: r.name, cover: safeUrl(r.background_image), rawgId: r.id,
+    genres: (r.genres || []).map(x => x.name).slice(0, 3), released: r.released || ''
+  };
+  $('fTitle').value = r.name;
+  hideSug(); renderPicked();
+  if (!editingId && formType !== 'pvp' && PVP_TAGS.some(t => tags.includes(t))){
+    setFormType('pvp');
+    $('fHint').textContent = "Looks like a competitive game, so it's set to PvP. Switch back if you want.";
+  }
+}
+function highlightSug(){ sugBox.querySelectorAll('.sug').forEach((b, i) => b.classList.toggle('active', i === sugIndex)); }
+
+sugBox.addEventListener('mousedown', e => e.preventDefault());   // keep focus in the text box
+sugBox.addEventListener('click', e => { const b = e.target.closest('.sug'); if (b) pickResult(sugResults[+b.dataset.i]); });
+$('fTitle').addEventListener('blur', () => setTimeout(hideSug, 120));
+$('fTitle').addEventListener('keydown', e => {
+  if (sugBox.hidden || !sugResults.length) return;
+  if (e.key === 'ArrowDown'){ e.preventDefault(); sugIndex = Math.min(sugResults.length - 1, sugIndex + 1); highlightSug(); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); sugIndex = Math.max(0, sugIndex - 1); highlightSug(); }
+  else if (e.key === 'Enter' && sugIndex >= 0){ e.preventDefault(); pickResult(sugResults[sugIndex]); }
+  else if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); hideSug(); }
+});
+
+
+/* ================================================================
+   7. GAME DETAILS (checklist, ranks, clips, notes)
+   ================================================================ */
+const detailDlg = $('detailDlg');
+let openId = null;
+
+function openDetail(id){
+  openId = id;
+  renderDetail();
+  $('dNotes').value = findGame(id).notes;
+  if (!detailDlg.open) detailDlg.showModal();
+}
+
+function renderDetail(){
+  const g = findGame(openId);
+  if (!g){ if (detailDlg.open) detailDlg.close(); return; }
+  const kind = g.type === 'pvp' ? 'PvP / endless' : 'Completable';
+  const sub = [kind, g.released ? g.released.slice(0, 4) : '', g.genres.join(', ')].filter(Boolean).join(' · ');
+  $('dBanner').innerHTML = coverHTML(g, 'd-cover', '', true) +
+    `<div class="d-title"><small>${esc(sub)}</small><h2>${esc(g.title)}</h2></div>`;
+  fillSelect($('dStatus'), Object.entries(statusMap(g)));
+  $('dStatus').value = g.status;
+  $('dMeta').textContent = [g.platform, g.hours ? g.hours + ' hours' : null, g.rating ? stars(g.rating) : null].filter(Boolean).join(' · ');
+  const fav = profile.favorites.includes(g.id);
+  $('dFav').textContent = fav ? '★ Favorite' : '☆ Favorite';
+  $('dFav').classList.toggle('on', fav);
+
+  $('dStory').hidden = g.type !== 'story';
+  $('dPvp').hidden = g.type !== 'pvp';
+
+  if (g.type === 'story'){
+    const p = progressOf(g);
+    const done = g.checklist.filter(i => i.done).length;
+    $('dProgressText').textContent = g.checklist.length ? `${done}/${g.checklist.length} · ${p}%` : 'No items yet';
+    $('dBar').style.width = (p || 0) + '%';
+    $('dList').innerHTML = g.checklist.map(item => `
+      <li class="${item.done ? 'done' : ''}">
+        <input type="checkbox" data-item="${esc(item.id)}" ${item.done ? 'checked' : ''} aria-label="Mark done">
+        <span>${esc(item.text)}</span>
+        <button class="del" data-del="${esc(item.id)}" aria-label="Remove item">✕</button>
+      </li>`).join('');
+  } else {
+    $('dRank').value = g.rank; $('dPeak').value = g.peakRank; $('dMain').value = g.main;
+  }
+
+  $('dClips').innerHTML = g.clips.length
+    ? g.clips.slice().sort((a, b) => b.added - a.added).map(c => clipHTML(c, g)).join('')
+    : '<p class="hint">No clips yet. Paste a link to your best moment above.</p>';
+}
+
+$('dStatus').addEventListener('change', e => { findGame(openId).status = e.target.value; saveGames(); render(); });
+$('dNotes').addEventListener('input', e => { findGame(openId).notes = e.target.value; saveGames(); });
+[['dRank','rank'],['dPeak','peakRank'],['dMain','main']].forEach(([id, field]) =>
+  $(id).addEventListener('change', e => { findGame(openId)[field] = e.target.value.trim(); saveGames(); render(); }));
+
+$('dFav').addEventListener('click', () => {
+  const i = profile.favorites.indexOf(openId);
+  if (i >= 0) profile.favorites.splice(i, 1);
+  else {
+    if (profile.favorites.length >= 6) return toast('You can have up to 6 favorites');
+    profile.favorites.push(openId);
+    toast('Added to your profile');
+  }
+  saveProfile(); renderDetail(); render();
+});
+
+$('itemForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const g = findGame(openId);
+  $('itemInput').value.split('\n').map(s => s.trim()).filter(Boolean)
+    .forEach(text => g.checklist.push({ id: uid(), text, done: false }));
+  $('itemInput').value = '';
+  saveGames(); renderDetail(); render();
+});
+$('itemInput').addEventListener('paste', e => {
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  if (text.includes('\n')){ e.preventDefault(); $('itemInput').value = text; $('itemForm').requestSubmit(); }
+});
+$('dList').addEventListener('click', e => {
+  const g = findGame(openId);
+  if (e.target.dataset.item){ g.checklist.find(i => i.id === e.target.dataset.item).done = e.target.checked; }
+  else if (e.target.dataset.del){ g.checklist = g.checklist.filter(i => i.id !== e.target.dataset.del); }
+  else return;
+  saveGames(); renderDetail(); render();
+});
+
+$('editBtn').addEventListener('click', () => openForm(openId));
+$('deleteBtn').addEventListener('click', () => {
+  const g = findGame(openId);
+  if (!confirm(`Delete "${g.title}"? This can't be undone.`)) return;
+  games = games.filter(x => x.id !== openId);
+  profile.favorites = profile.favorites.filter(id => id !== openId);
+  saveGames(); saveProfile();
+  detailDlg.close();
+  render();
+});
+
+
+/* ================================================================
+   8. CLIPS (links to YouTube, Twitch, Streamable or video files)
+   ================================================================ */
+function parseClip(url){
+  let u;
+  try { u = new URL(url); } catch(e){ return { kind:'link', label:'Link' }; }
+  const host = u.hostname.replace(/^(www\.|m\.)/, '');
+  const parts = u.pathname.split('/').filter(Boolean);
+  if (host === 'youtu.be' && /^[\w-]{6,20}$/.test(parts[0] || '')) return { kind:'youtube', id:parts[0], label:'YouTube' };
+  if (host === 'youtube.com'){
+    const v = u.searchParams.get('v');
+    if (/^[\w-]{6,20}$/.test(v || '')) return { kind:'youtube', id:v, label:'YouTube' };
+    if (['shorts','embed','live'].includes(parts[0]) && /^[\w-]{6,20}$/.test(parts[1] || '')) return { kind:'youtube', id:parts[1], label:'YouTube' };
+  }
+  if (host === 'clips.twitch.tv' && parts[0] && parts[0] !== 'embed') return { kind:'twitch', id:parts[0], label:'Twitch' };
+  if (host === 'twitch.tv' && parts[1] === 'clip' && parts[2]) return { kind:'twitch', id:parts[2], label:'Twitch' };
+  if (host === 'streamable.com' && parts.length) return { kind:'streamable', id:parts[parts.length - 1], label:'Streamable' };
+  if (/\.(mp4|webm|mov)$/i.test(u.pathname)) return { kind:'video', label:'Video' };
+  return { kind:'link', label: host.replace(/\.(com|tv|gg|net|io)$/, '') || 'Link' };
+}
+
+function clipHTML(c, g, showGame = false){
+  const info = parseClip(c.url);
+  const img = info.kind === 'youtube'
+    ? `<img src="https://img.youtube.com/vi/${info.id}/hqdefault.jpg" alt="" loading="lazy">`
+    : (g.cover ? `<img src="${esc(sized(g.cover, 420))}" data-full="${esc(g.cover)}" alt="" loading="lazy">` : '');
+  return `<button class="clip" data-clip="${esc(g.id)}" data-clip-id="${esc(c.id)}">
+    <div class="clip-thumb" style="--h:${hueFor(g.title)}">${img}<span class="play">▶</span><em class="src">${esc(info.label)}</em></div>
+    <div class="clip-title">${esc(c.title || 'Untitled clip')}</div>
+    ${showGame ? `<div class="meta">${esc(g.title)}</div>` : ''}
+  </button>`;
+}
+
+function playerHTML(info, url){
+  const host = location.hostname;
+  switch (info.kind){
+    case 'youtube':
+      return `<iframe src="https://www.youtube-nocookie.com/embed/${info.id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    case 'twitch':
+      return host
+        ? `<iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(info.id)}&parent=${encodeURIComponent(host)}&autoplay=true" allow="autoplay; fullscreen" allowfullscreen></iframe>`
+        : `<div class="player-msg">Twitch clips play here once your site is online on GitHub Pages. For now, use "Open original".</div>`;
+    case 'streamable':
+      return `<iframe src="https://streamable.com/e/${encodeURIComponent(info.id)}?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+    case 'video':
+      return `<video src="${esc(url)}" controls autoplay playsinline></video>`;
+    default:
+      return `<div class="player-msg">This site's clips can't play inside Checkpoint. Use "Open original" to watch it.</div>`;
+  }
+}
+
+const clipDlg = $('clipDlg');
+let openClip = null;
+function showClip(gameId, clipId){
+  const g = findGame(gameId); if (!g) return;
+  const c = g.clips.find(x => x.id === clipId); if (!c) return;
+  openClip = { gameId, clipId };
+  $('cTitle').textContent = c.title || g.title;
+  $('cPlayer').innerHTML = playerHTML(parseClip(c.url), c.url);
+  $('cLink').href = c.url;
+  clipDlg.showModal();
+}
+clipDlg.addEventListener('close', () => { $('cPlayer').innerHTML = ''; });   // stops the video
+$('cDelete').addEventListener('click', () => {
+  if (!openClip || !confirm('Remove this clip?')) return;
+  const g = findGame(openClip.gameId);
+  g.clips = g.clips.filter(c => c.id !== openClip.clipId);
+  saveGames(); clipDlg.close(); render();
+  if (detailDlg.open) renderDetail();
+});
+
+$('clipForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const url = safeUrl($('clipUrl').value.trim());
+  if (!url) return toast('Paste a full link starting with https://');
+  findGame(openId).clips.push({ id: uid(), url, title: $('clipTitle').value.trim(), added: Date.now() });
+  $('clipUrl').value = ''; $('clipTitle').value = '';
+  saveGames(); renderDetail(); render();
+  toast('Clip added');
+});
+
+
+/* ================================================================
+   9. PROFILE PAGE
+   ================================================================ */
+function miniHTML(g){
+  return `<button class="mini" data-open="${esc(g.id)}">
+    ${coverHTML(g, 'mini-cover', '', true)}
+    <div class="mini-t">${esc(g.title)}</div>
+    <div class="meta">${esc(statusMap(g)[g.status])}</div>
+  </button>`;
+}
+
+function profileSection(key){
+  const story = games.filter(g => g.type === 'story');
+  const pvp = games.filter(g => g.type === 'pvp');
+  if (key === 'stats'){
+    const completed = story.filter(g => g.status === 'completed').length;
+    const finishable = story.filter(g => g.status !== 'wishlist').length;
+    const items = [
+      ['Games', games.length],
+      ['Completed', completed],
+      ['Completion rate', finishable ? Math.round(completed / finishable * 100) + '%' : '—'],
+      ['Hours played', Math.round(games.reduce((s, g) => s + g.hours, 0))],
+      ['Checklist items', story.reduce((s, g) => s + g.checklist.filter(i => i.done).length, 0)],
+      ['PvP games', pvp.length]
+    ];
+    return `<div class="stats p-stats">${items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
+  }
+  if (key === 'playing'){
+    const list = games.filter(g => g.status === 'playing' || g.status === 'main');
+    return list.length ? `<div class="minis">${list.map(miniHTML).join('')}</div>` : '';
+  }
+  if (key === 'favorites'){
+    const list = profile.favorites.map(findGame).filter(Boolean);
+    return list.length ? `<div class="minis">${list.map(miniHTML).join('')}</div>` : '';
+  }
+  if (key === 'ranks'){
+    const list = pvp.filter(g => g.rank || g.peakRank || g.main);
+    return list.length ? `<div class="ranks">${list.map(g => `
+      <button class="rank-row" data-open="${esc(g.id)}">
+        ${coverHTML(g, 'rank-thumb', '', true)}
+        <div><b>${esc(g.title)}</b><span class="meta">${g.main ? 'Main: ' + esc(g.main) : esc(PVP_STATUS[g.status])}</span></div>
+        <div class="rank-vals">
+          <div><small>Current</small><b>${esc(g.rank || '—')}</b></div>
+          <div><small>Peak</small><b>${esc(g.peakRank || '—')}</b></div>
+        </div>
+      </button>`).join('')}</div>` : '';
+  }
+  if (key === 'clips'){
+    const all = games.flatMap(g => g.clips.map(c => ({ c, g }))).sort((a, b) => b.c.added - a.c.added).slice(0, 6);
+    return all.length ? `<div class="clips">${all.map(({ c, g }) => clipHTML(c, g, true)).join('')}</div>` : '';
+  }
+  return '';
+}
+
+function renderProfile(){
+  const p = profile;
+  const banner = p.bannerStyle === 'image' && p.banner ? `<img src="${esc(p.banner)}" alt="">` : '';
+  const avatar = p.avatar ? `<img src="${esc(p.avatar)}" alt="">` : `<span>${esc(initials(p.name || 'P'))}</span>`;
+  const tags = GAMER_TAGS.filter(([k]) => p.tags[k]).map(([k, label]) =>
+    `<button class="tag" data-copy="${esc(p.tags[k])}" title="Click to copy"><small>${label}</small>${esc(p.tags[k])}</button>`).join('');
+  const sections = p.sections.filter(s => s.on).map(s => {
+    const body = profileSection(s.key);
+    return body ? `<section class="p-sec"><h2>${SECTION_LABELS[s.key]}</h2>${body}</section>` : '';
+  }).join('');
+
+  $('view-profile').innerHTML = `
+    <div class="p-card">
+      <div class="p-banner b-${p.bannerStyle}">${banner}</div>
+      <div class="p-main">
+        <div class="p-avatar shape-${p.avatarShape}">${avatar}</div>
+        <div class="p-id">
+          <h1>${esc(p.name || 'Player')}</h1>
+          ${p.handle ? `<div class="meta">@${esc(p.handle)}</div>` : ''}
+          ${p.status ? `<div class="p-status">${esc(p.status)}</div>` : ''}
+        </div>
+        <div class="p-actions"><button class="btn" data-action="edit-profile">Edit profile</button></div>
+      </div>
+      ${p.bio ? `<p class="p-bio">${esc(p.bio)}</p>` : ''}
+      ${tags ? `<div class="tags">${tags}</div>` : '<div></div>'}
+    </div>
+    ${sections || `<div class="empty" style="margin-top:24px"><p>Add some games and your profile will fill up with stats, favorites, ranks and clips.</p></div>`}
+    <div style="height:60px"></div>`;
+}
+
+/* ---------- Edit profile window ---------- */
+const profileDlg = $('profileDlg');
+let draft = null;
+
+$('pTags').innerHTML = GAMER_TAGS.map(([k, label]) =>
+  `<div><label for="tag-${k}">${label}</label><input type="text" id="tag-${k}" data-tag="${k}" maxlength="50"></div>`).join('');
+
+function openProfileEditor(){
+  draft = JSON.parse(JSON.stringify(profile));
+  $('pName').value = draft.name; $('pHandle').value = draft.handle;
+  $('pStatus').value = draft.status; $('pBio').value = draft.bio;
+  $('pShape').value = draft.avatarShape; $('pBannerStyle').value = draft.bannerStyle;
+  document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
+  renderImgPreviews(); renderSectionEditor();
+  profileDlg.showModal();
+}
+function renderImgPreviews(){
+  $('pAvatarPrev').style.backgroundImage = draft.avatar ? `url("${draft.avatar}")` : '';
+  $('pBannerPrev').style.backgroundImage = draft.banner ? `url("${draft.banner}")` : '';
+}
+function renderSectionEditor(){
+  const last = draft.sections.length - 1;
+  $('pSections').innerHTML = draft.sections.map((s, i) => `
+    <li>
+      <label class="check"><input type="checkbox" data-sec-on="${i}" ${s.on ? 'checked' : ''}> ${SECTION_LABELS[s.key]}</label>
+      <span>
+        <button type="button" class="btn small" data-sec-move="${i}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn small" data-sec-move="${i}" data-dir="1" ${i === last ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </span>
+    </li>`).join('');
+}
+$('pSections').addEventListener('click', e => {
+  const b = e.target.closest('[data-sec-move]');
+  if (b){
+    const i = +b.dataset.secMove, j = i + (+b.dataset.dir);
+    [draft.sections[i], draft.sections[j]] = [draft.sections[j], draft.sections[i]];
+    renderSectionEditor();
+  }
+});
+$('pSections').addEventListener('change', e => {
+  if (e.target.dataset.secOn !== undefined) draft.sections[+e.target.dataset.secOn].on = e.target.checked;
+});
+
+// Shrink uploaded pictures so they fit in browser storage
+function readImage(file, maxW, maxH, square){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const src = URL.createObjectURL(file);
+    img.onload = () => {
+      let sx = 0, sy = 0, sw = img.width, sh = img.height;
+      if (square){ const m = Math.min(sw, sh); sx = (sw - m) / 2; sy = (sh - m) / 2; sw = sh = m; }
+      const scale = Math.min(1, maxW / sw, maxH / sh);
+      const c = document.createElement('canvas');
+      c.width = Math.round(sw * scale); c.height = Math.round(sh * scale);
+      c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(src);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('bad image')); };
+    img.src = src;
+  });
+}
+$('pAvatarBtn').addEventListener('click', () => $('pAvatarFile').click());
+$('pBannerBtn').addEventListener('click', () => $('pBannerFile').click());
+$('pAvatarDel').addEventListener('click', () => { draft.avatar = ''; renderImgPreviews(); });
+$('pBannerDel').addEventListener('click', () => {
+  draft.banner = '';
+  if (draft.bannerStyle === 'image'){ draft.bannerStyle = 'gradient'; $('pBannerStyle').value = 'gradient'; }
+  renderImgPreviews();
+});
+$('pAvatarFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { draft.avatar = await readImage(f, 320, 320, true); renderImgPreviews(); }
+  catch(err){ toast("That picture couldn't be loaded"); }
+});
+$('pBannerFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    draft.banner = await readImage(f, 1500, 500, false);
+    draft.bannerStyle = 'image'; $('pBannerStyle').value = 'image';
+    renderImgPreviews();
+  } catch(err){ toast("That picture couldn't be loaded"); }
+});
+
+$('profileForm').addEventListener('submit', e => {
+  e.preventDefault();
+  draft.name = $('pName').value.trim() || 'Player';
+  draft.handle = $('pHandle').value.trim().replace(/^@/, '');
+  draft.status = $('pStatus').value.trim();
+  draft.bio = $('pBio').value.trim();
+  draft.avatarShape = $('pShape').value;
+  draft.bannerStyle = $('pBannerStyle').value;
+  draft.tags = {};
+  document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
+  profile = normalizeProfile(draft);
+  saveProfile();
+  profileDlg.close();
+  render();
+  toast('Profile saved');
+});
+
+
+/* ================================================================
+   10. CUSTOMIZE PAGE
+   ================================================================ */
+$('presets').innerHTML = Object.entries(PRESETS).map(([k, p]) => `
+  <button class="preset" data-preset="${k}" style="--pb:${p.bg};--pt:${p.text}">
+    <span class="sw"><i style="background:${p.bg}"></i><i style="background:${p.panel}"></i><i style="background:${p.accent}"></i></span>
+    ${p.name}
+  </button>`).join('');
+fillSelect($('cHead'), Object.entries(FONTS).map(([k, f]) => [k, f[0]]));
+fillSelect($('cBody'), BODY_FONTS.map(k => [k, FONTS[k][0]]));
+
+function syncCustomize(){
+  $('cBg').value = theme.bg; $('cPanel').value = theme.panel; $('cText').value = theme.text; $('cAccent').value = theme.accent;
+  $('cHead').value = theme.headFont; $('cBody').value = theme.bodyFont;
+  $('cRadius').value = theme.radius; $('cRadiusOut').textContent = theme.radius + 'px';
+  $('cCard').value = theme.cardSize; $('cCardOut').textContent = theme.cardSize + 'px';
+  $('cBgEffect').value = theme.bgEffect;
+  $('cCovers').checked = theme.covers; $('cRatings').checked = theme.showRatings;
+  document.querySelectorAll('.preset').forEach(b => b.classList.toggle('active', b.dataset.preset === theme.preset));
+}
+function themeChanged(){ applyTheme(); saveTheme(); syncCustomize(); }
+
+$('presets').addEventListener('click', e => {
+  const b = e.target.closest('[data-preset]'); if (!b) return;
+  const p = PRESETS[b.dataset.preset];
+  Object.assign(theme, { preset: b.dataset.preset, bg: p.bg, panel: p.panel, text: p.text, accent: p.accent });
+  themeChanged();
+});
+[['cBg','bg'],['cPanel','panel'],['cText','text'],['cAccent','accent']].forEach(([id, key]) =>
+  $(id).addEventListener('input', e => { theme[key] = e.target.value; theme.preset = 'custom'; themeChanged(); }));
+$('cHead').addEventListener('change', e => { theme.headFont = e.target.value; themeChanged(); });
+$('cBody').addEventListener('change', e => { theme.bodyFont = e.target.value; themeChanged(); });
+$('cRadius').addEventListener('input', e => { theme.radius = +e.target.value; themeChanged(); });
+$('cCard').addEventListener('input', e => { theme.cardSize = +e.target.value; themeChanged(); });
+$('cBgEffect').addEventListener('change', e => { theme.bgEffect = e.target.value; themeChanged(); });
+$('cCovers').addEventListener('change', e => { theme.covers = e.target.checked; themeChanged(); });
+$('cRatings').addEventListener('change', e => { theme.showRatings = e.target.checked; themeChanged(); });
+$('cReset').addEventListener('click', () => { theme = normalizeTheme(null); themeChanged(); toast('Theme reset'); });
+
+/* ---------- Backups ---------- */
+$('cExport').addEventListener('click', () => {
+  const data = { app:'checkpoint', version:2, exported:new Date().toISOString(), games, profile, theme };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `checkpoint-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('cImport').addEventListener('click', () => $('cImportFile').click());
+$('cImportFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const list = Array.isArray(data) ? data : data.games;   // works with old backups too
+    if (!Array.isArray(list)) throw new Error('bad file');
+    if (!confirm(`Replace your current data with this backup (${list.length} games)?`)) return;
+    games = list.filter(g => g && g.title).map(normalizeGame);
+    if (!Array.isArray(data) && data.profile) profile = normalizeProfile(data.profile);
+    if (!Array.isArray(data) && data.theme) theme = normalizeTheme(data.theme);
+    saveGames(); saveProfile(); saveTheme(); applyTheme(); render();
+    toast('Backup imported');
+  } catch(err){ alert("That file doesn't look like a Checkpoint backup."); }
+});
+$('cErase').addEventListener('click', () => {
+  if (!confirm('Erase ALL your games, profile and theme from this browser? Export a backup first if you want to keep them.')) return;
+  Object.values(KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+  location.hash = 'library';
+  location.reload();
+});
+
+
+/* ================================================================
+   11. CLICKS THAT WORK ANYWHERE ON THE PAGE
+   ================================================================ */
+$('addBtn').addEventListener('click', () => openForm(null, mode()));
+$('search').addEventListener('input', e => { search = e.target.value.trim().toLowerCase(); renderGrid(); });
+$('sort').addEventListener('change', e => { sortBy = e.target.value; renderGrid(); });
+$('chips').addEventListener('click', e => {
+  const chip = e.target.closest('[data-filter]'); if (!chip) return;
+  filter = chip.dataset.filter; renderChips(); renderGrid();
+});
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  const clip = t.closest('[data-clip]');
+  if (clip) return showClip(clip.dataset.clip, clip.dataset.clipId);
+  const open = t.closest('[data-open]');
+  if (open) return openDetail(open.dataset.open);
+  const action = t.closest('[data-action]');
+  if (action && action.dataset.action === 'add') return openForm(null, mode());
+  if (action && action.dataset.action === 'edit-profile') return openProfileEditor();
+  const copy = t.closest('[data-copy]');
+  if (copy){
+    navigator.clipboard?.writeText(copy.dataset.copy).then(() => toast('Copied ' + copy.dataset.copy), () => {});
+    return;
+  }
+  const close = t.closest('[data-close]');
+  if (close) return close.closest('dialog').close();
+});
+
+// Clicking the dark area outside a pop-up closes it
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+
+/* ================================================================
+   12. START
+   ================================================================ */
+$('siteName').textContent = SITE_NAME;
+applyTheme();
+route();
+</script>
+</body>
+</html>
