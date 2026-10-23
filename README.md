@@ -1,113 +1,89 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="Checkpoint, your cozy little game tracker" width="100%">
+<img src="assets/header.gif" alt="Anime GIF header" width="500">
 
-<img src="https://readme-typing-svg.demolab.com?font=Nunito&weight=800&size=22&duration=2600&pause=900&color=E0679A&center=true&vCenter=true&width=520&lines=track+your+backlog+%E2%99%A1;100%25+your+favorite+games+%E2%9C%A7;flex+your+ranks+and+clips+%E2%98%86;make+it+cute+%E2%80%94+make+it+yours+%E2%99%A1" alt="track your backlog ♡ 100% your favorite games ✧ flex your ranks and clips ☆">
+<h1>✦ Checkpoint ✦</h1>
 
-<br>
+<p><b>a cozy little tracker for your backlog, your 100% runs and your PvP grind ♡</b></p>
 
-<a href="https://YOURNAME.github.io/checkpoint/"><img src="https://img.shields.io/badge/%E2%99%A1%20open%20checkpoint%20%E2%99%A1-ff8fb8?style=for-the-badge" alt="Open Checkpoint"></a>
+<a href="https://YOURNAME.github.io/checkpoint/"><img src="https://img.shields.io/badge/%E2%99%A1%20open%20checkpoint-ff8fb8?style=for-the-badge" alt="Open Checkpoint"></a>
 <a href="../../issues"><img src="https://img.shields.io/badge/report%20a%20bug-b39cff?style=for-the-badge" alt="Report a bug"></a>
-<a href="../../issues"><img src="https://img.shields.io/badge/wish%20for%20a%20feature-6fd6d0?style=for-the-badge" alt="Suggest a feature"></a>
+<a href="../../issues"><img src="https://img.shields.io/badge/request%20a%20feature-6fd6d0?style=for-the-badge" alt="Request a feature"></a>
 
-<img src="https://img.shields.io/badge/no%20account%20needed-ffcf6b?style=flat-square" alt="No account needed">
-<img src="https://img.shields.io/badge/made%20with-HTML%20%C2%B7%20CSS%20%C2%B7%20JS-ffb3d1?style=flat-square" alt="Made with HTML, CSS and JavaScript">
-<img src="https://img.shields.io/badge/license-MIT-cdb4ff?style=flat-square" alt="MIT license">
-
-<img src="assets/divider.svg" alt="" width="70%">
+<img src="assets/divider.svg" alt="" width="60%">
 
 </div>
 
-<table>
-<tr>
-<td width="170" align="center"><img src="assets/mascot.svg" alt="Pochi the controller mascot waving" width="150"></td>
-<td>
+## ✦ About
 
-### ✧ konnichiwa~! (ﾉ◕ヮ◕)ﾉ\*:･ﾟ✧
+<img src="assets/pixel-girl.gif" alt="Pixel art girl" align="right" width="150">
 
-I'm **Pochi**, Checkpoint's little helper ♡
+Checkpoint keeps track of **every** game you play: your backlog, the games you want to 100%, and the PvP games you'll never *really* finish.
 
-Checkpoint is a cozy place to keep track of **every** game you play: your backlog, the games you want to 100%, and the PvP games you'll never *really* finish (ﾟ∀ﾟ)
+Most trackers think every game has an ending. Checkpoint doesn't, so ranked grinders get their own space with ranks, mains and clips instead of a "completed" button.
 
-</td>
-</tr>
-</table>
+No sign-up and no ads. Everything is saved right in your browser ♡
 
-<div align="center"><img src="assets/divider.svg" alt="" width="70%"></div>
+<br clear="right">
 
-## ♡ why checkpoint? ♡
+## ✦ Features
 
-Most game trackers think every game has an ending... but nobody ever "finishes" Valorant (；ω；) So Checkpoint has **two kinds of games**:
+<img src="assets/blonde-girl.gif" alt="Anime girl" align="right" width="140">
 
-<div align="center">
+- 🔍 **Game search** that fills in banners and info automatically
+- ✅ **Completion checklists** for bosses, collectibles and achievements
+- ⚔️ **A PvP section** with current rank, peak rank and your main
+- 🎬 **Clips** from YouTube, Twitch or Streamable, playable in the app
+- 🎀 **A custom profile** with banner, picture, bio, gamer tags and favorites
+- 🎨 **Themes** with 9 presets, custom colors, fonts and layouts
+- 💾 **Backups** you can export and import anytime
+- 📱 **Works on phones**
 
-| 📚 **library** ₍ᐢ. .ᐢ₎ | ⚔️ **pvp** (•̀ᴗ•́)و |
-|:---:|:---:|
-| games you can finish | competitive & live-service games |
-| backlog → playing → completed | main game · casual · on a break · retired |
-| completion checklists + progress bars | current rank · peak rank · your main |
+<br clear="right">
 
-</div>
+## ✦ Library vs PvP
 
-## ✧ features ✧
+| | 📚 Library | ⚔️ PvP |
+|---|---|---|
+| **For** | games you can finish | competitive & live-service games |
+| **Statuses** | backlog · playing · completed · dropped · wishlist | main game · casual · on a break · retired |
+| **Track** | checklists and % complete | current rank, peak rank and main |
 
-| | |
-|:---:|---|
-| 🔍 | **game search with auto-fill.** type a game, pick it, and its banner + info pop right in ✨ |
-| ✅ | **completion checklists.** bosses, collectibles, achievements... paste a whole list at once! |
-| ⚔️ | **a real pvp section.** no "completed" button for games that never end ( ´ ▽ ` ) |
-| 🎬 | **clips.** add YouTube, Twitch or Streamable links and watch them right in the app |
-| 🎀 | **cute profile.** banner, pfp (circle, square, or *hexagon*!), bio, gamer tags, favorites |
-| 🎨 | **customize everything.** 9 themes like *Sakura* and *Neon*, your own colors, fonts, even a pixel font |
-| 🔒 | **private by default.** no sign-up! everything stays in your own browser |
-| 💾 | **backups.** export and import your data anytime |
-| 📱 | **works on phones** too ♡ |
+## ✦ How to use
 
-<div align="center"><img src="assets/divider.svg" alt="" width="70%"></div>
-
-## ☆ how to use it ☆
-
-1. open the [**live site**](https://YOURNAME.github.io/checkpoint/) ♡
-2. click **+ Add game** and start typing a title
-3. click any game to add checklist items, ranks, clips and notes
-4. make it *yours* in the **Customize** and **Profile** tabs ✧
+1. Open the [live site](https://YOURNAME.github.io/checkpoint/)
+2. Click **+ Add game** and start typing a title
+3. Click any game to add checklist items, ranks, clips and notes
+4. Make it yours in the **Customize** and **Profile** tabs
 
 > [!TIP]
-> your data lives in your browser! use **Customize → Export backup** every now and then so you never lose it (｡•̀ᴗ-)✧
+> Your data lives in your browser. Use **Customize → Export backup** now and then so you never lose it.
 
-## ✿ roadmap ✿
+## ✦ Roadmap
 
-- [x] backlog tracker with completion checklists
-- [x] pvp section with ranks and mains
-- [x] clips
-- [x] customizable themes and profile
-- [x] game search with banners
-- [ ] accounts + shareable profile links
-- [ ] import your Steam library
+- [x] Backlog tracker with completion checklists
+- [x] PvP section with ranks and mains
+- [x] Clips
+- [x] Custom themes and profile
+- [x] Game search with banners
+- [ ] Accounts and shareable profile links
+- [ ] Steam library import
 - [ ] Riot and Battle.net stats
-- [ ] community-made checklists
+- [ ] Community-made checklists
 
-## ⋆ run it yourself ⋆
+## ✦ Run it yourself
 
-Checkpoint is just **one** `index.html` file, no setup needed ✌️
+Checkpoint is a single `index.html` file with no setup.
 
-1. download `index.html` and open it in your browser
-2. *(optional)* to turn on game search, get a free key at [rawg.io/apidocs](https://rawg.io/apidocs) and paste it into `RAWG_KEY` near the top of the script
-
-<div align="center"><img src="assets/divider.svg" alt="" width="70%"></div>
+1. Download `index.html` and open it in your browser
+2. *(Optional)* For game search, get a free key at [rawg.io/apidocs](https://rawg.io/apidocs) and paste it into `RAWG_KEY` near the top of the script
 
 <div align="center">
 
-### ♡ credits ♡
+<img src="assets/divider.svg" alt="" width="60%">
 
-game info and images by [**RAWG**](https://rawg.io) · Pochi and all the art drawn just for Checkpoint
+<p>Game info and images by <a href="https://rawg.io">RAWG</a> · GIFs belong to their original artists · <a href="LICENSE">MIT License</a></p>
 
-released under the [**MIT license**](LICENSE): free to use, change and share
-
-<br>
-
-<img src="assets/mascot.svg" alt="" width="70">
-
-**thanks for visiting~! ☆彡**
+<p><b>thanks for visiting~ ☆彡</b></p>
 
 </div>
