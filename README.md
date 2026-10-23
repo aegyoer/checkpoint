@@ -47,6 +47,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 ˚₊ Completion checklists for bosses, collectibles and achievements<br>
 ˚₊ A PvP section with current rank, peak rank and your main<br>
 ˚₊ Clips from YouTube, Twitch or Streamable<br>
+˚₊ A physical collection tab for discs, cartridges and collector's editions<br>
 ˚₊ Themes, colors and fonts you can change
 
 </td>
@@ -59,6 +60,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 ˚₊ Connect Steam for verified hours that can't be faked<br>
 ˚₊ Steam achievements tracked for every game 🏆<br>
 ˚₊ Live "now playing" from Steam and Discord<br>
+˚₊ Alt accounts, and a library anyone can browse from your profile<br>
 ˚₊ Friends and followers, you choose what's shown
 
 </td>

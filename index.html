@@ -134,6 +134,21 @@ label.check input{width:17px;height:17px;accent-color:var(--accent)}
 .cover,.d-cover,.mini-cover,.rank-thumb,.clip-thumb{position:relative;display:grid;place-items:center;overflow:hidden;
   background:linear-gradient(135deg,hsl(var(--h) 70% 45%),hsl(calc(var(--h) + 50) 70% 25%))}
 .cover{aspect-ratio:16/10}
+.cover.tall{aspect-ratio:3/4}
+.stat-btn{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;transition:border-color .12s,transform .12s}
+.stat-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+.stat-btn b{display:block;font-family:var(--font-head);font-size:1.6rem;line-height:1.15}
+.stat-btn span{color:var(--muted);font-size:.82rem}
+dialog.lib-dlg{width:min(980px,calc(100vw - 24px))}
+.lib-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lib-tools input{flex:1;min-width:160px}
+.lib-tools select{width:auto}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;max-height:60vh;overflow:auto;padding:2px}
+.lib-item{all:unset;box-sizing:border-box;display:grid;gap:3px;min-width:0}
+button.lib-item{cursor:pointer}
+.lib-item .mini-cover{aspect-ratio:3/4;border-radius:var(--radius)}
+button.lib-item:hover .mini-cover{transform:translateY(-3px)}
+.lib-item b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cover img,.d-cover img,.mini-cover img,.rank-thumb img,.clip-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cover span,.d-cover span,.mini-cover span,.rank-thumb span{font-family:var(--font-head);font-size:2rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 2px 12px rgba(0,0,0,.3)}
 .badge{position:absolute;top:8px;left:8px;font-style:normal;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);z-index:1}
@@ -276,6 +291,11 @@ dialog > form{display:contents}
 .tag:hover{border-color:var(--accent)}
 .tag small{color:var(--muted);font-size:.72rem}
 .tag .go{color:var(--accent);font-size:.75rem}
+.alts{display:flex;flex-wrap:wrap;gap:6px;padding:10px 24px 0;align-items:center}
+.alts-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-right:4px}
+.tag.alt{padding:4px 9px;font-size:.8rem}
+.p-card.center .alts{justify-content:center}
+.alt-row{display:grid;grid-template-columns:160px 1fr 80px auto;gap:6px;align-items:center}
 .tag-logo{display:inline-flex;align-items:center;align-self:center;color:var(--accent)}
 .tag-logo svg{width:16px;height:16px;fill:currentColor;display:block}
 .mask-logo{width:16px;height:16px;display:block;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
@@ -445,7 +465,10 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   .p-card.center .p-actions{top:-90px;right:12px}
   .p-card.no-banner .p-actions,.p-card.center.no-banner .p-actions{position:static;padding:0 0 4px}
   .p-bio{margin-left:16px;margin-right:16px}
-  .tags,.live,.p-meta{padding-left:16px;padding-right:16px}
+  .tags,.live,.p-meta,.alts{padding-left:16px;padding-right:16px}
+  .alt-row{grid-template-columns:1fr auto}
+  .alt-row input{grid-column:1 / -1;grid-row:2}
+  .alt-row span{display:none}
   .checks{grid-template-columns:1fr}
   .rank-row{gap:10px;padding:10px}
   .rank-thumb{width:52px;height:36px}
@@ -468,6 +491,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
     <nav class="tabs" aria-label="Sections">
       <a href="#library" data-view="library">Library</a>
       <a href="#pvp" data-view="pvp">PvP</a>
+      <a href="#collection" data-view="collection">Collection</a>
       <a href="#profile" data-view="profile">Profile</a>
       <a href="#customize" data-view="customize">Customize</a>
     </nav>
@@ -492,6 +516,23 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
     </div>
     <div class="chips" id="chips"></div>
     <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- PHYSICAL COLLECTION -->
+  <section id="view-collection" hidden>
+    <div class="view-head">
+      <h1>Physical collection</h1>
+      <p class="sub">The games on your shelf: discs, cartridges, collector's editions. Shown on your profile too.</p>
+    </div>
+    <div class="stats" id="colStats"></div>
+    <div class="toolbar">
+      <input type="search" class="search" id="colSearch" placeholder="Search your collection…" aria-label="Search collection">
+      <select id="colSort" aria-label="Sort collection">
+        <option value="recent">Recently added</option><option value="title">A → Z</option><option value="platform">By console</option>
+      </select>
+    </div>
+    <div class="chips" id="colChips"></div>
+    <div class="grid" id="colGrid"></div>
   </section>
 
   <!-- PROFILE (filled in by the script) -->
@@ -931,12 +972,20 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
       </div>
 
       <div class="ed-group">
+        <h3>Alt accounts</h3>
+        <p class="hint">Your other accounts on any platform. They show under your gamer tags.</p>
+        <div id="pAlts" style="display:grid;gap:8px"></div>
+        <div><button type="button" class="btn small" id="pAltAdd">+ Add alt account</button></div>
+      </div>
+
+      <div class="ed-group">
         <h3>Privacy</h3>
         <div class="checks">
           <label class="check"><input type="checkbox" id="pvLive"> Show what I'm playing (live)</label>
           <label class="check"><input type="checkbox" id="pvFollowers"> Show follower counts</label>
           <label class="check"><input type="checkbox" id="pvFriends"> Show my friends list</label>
           <label class="check"><input type="checkbox" id="pvJoined"> Show when I joined</label>
+          <label class="check"><input type="checkbox" id="pvLibrary"> Let people browse my full library</label>
         </div>
       </div>
 
@@ -964,6 +1013,62 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
     <button type="button" class="btn" data-close>Cancel</button>
     <button type="button" class="btn primary" id="steamGo">Sync</button>
   </div>
+</dialog>
+
+<!-- Pop-up: someone's whole library -->
+<dialog id="libDlg" class="lib-dlg">
+  <div class="dlg-head">
+    <h2 id="libTitle">Library</h2>
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+  </div>
+  <div class="dlg-body">
+    <div class="chips" style="padding:0" id="libTabs"></div>
+    <div class="lib-tools">
+      <input type="search" id="libSearch" placeholder="Search…" aria-label="Search this library">
+      <select id="libSort" aria-label="Sort"></select>
+    </div>
+    <div class="chips" style="padding:0" id="libChips"></div>
+    <div class="lib-grid" id="libGrid"></div>
+  </div>
+</dialog>
+
+<!-- Pop-up: add / edit a physical game -->
+<dialog id="collDlg">
+  <form id="collForm" autocomplete="off">
+    <div class="dlg-head">
+      <h2 id="collTitle">Add to collection</h2>
+      <button type="button" class="x" data-close aria-label="Close">×</button>
+    </div>
+    <div class="dlg-body">
+      <div>
+        <label for="colTitle">Game title</label>
+        <div class="suggest-wrap">
+          <input type="text" id="colTitle" required maxlength="120" placeholder="Start typing… e.g. Persona 5 Royal">
+          <div class="suggest" id="colSuggest" hidden></div>
+        </div>
+      </div>
+      <div class="picked" id="colPicked" hidden></div>
+      <div class="pic-row">
+        <button type="button" class="btn small" id="colPicBtn">📷 Use my own picture</button>
+        <input type="file" id="colPicFile" accept="image/*" hidden>
+        <span class="hint">A photo of your copy works great.</span>
+      </div>
+      <div class="row">
+        <div><label for="colPlatform">Console</label><select id="colPlatform"></select></div>
+        <div><label for="colEdition">Edition</label><select id="colEdition"></select></div>
+      </div>
+      <div class="row">
+        <div><label for="colCondition">Condition</label><select id="colCondition"></select></div>
+        <div><label for="colRegion">Region</label><select id="colRegion"></select></div>
+      </div>
+      <div><label for="colNotes">Notes</label><textarea id="colNotes" rows="2" maxlength="300" placeholder="Where you got it, what's inside the box…"></textarea></div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn danger left" id="colDelete" hidden>Remove</button>
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" class="btn primary" id="colSave">Add to collection</button>
+    </div>
+  </form>
 </dialog>
 
 <!-- Pop-up: list of people (followers, following, friends) -->
@@ -1029,7 +1134,12 @@ const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', re
 const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
 const GAMER_TAGS = [['steam','Steam'],['league','League of Legends'],['valorant','Valorant'],['deadlock','Deadlock'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
 const LEAGUE_REGIONS = [['na1','NA'],['euw1','EUW'],['eun1','EUNE'],['kr','KR'],['br1','BR'],['la1','LAN'],['la2','LAS'],['oc1','OCE'],['tr1','TR'],['ru','RU'],['jp1','JP'],['me1','ME'],['ph2','PH'],['sg2','SG'],['th2','TH'],['tw2','TW'],['vn2','VN']];
-const SECTION_LABELS = { badges:'Badges', stats:'Stats', steam:'Steam ✓', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', friends:'Friends' };
+const SECTION_LABELS = { badges:'Badges', stats:'Stats', steam:'Steam ✓', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', collection:'Physical collection', friends:'Friends' };
+// Physical collection choices
+const PHYS_PLATFORMS = ['PlayStation 5','PlayStation 4','PlayStation 3','PlayStation 2','PlayStation','PSP','PS Vita','Nintendo Switch 2','Nintendo Switch','Wii U','Wii','GameCube','Nintendo 64','SNES','NES','Nintendo 3DS','Nintendo DS','Game Boy Advance','Game Boy / Color','Xbox Series X|S','Xbox One','Xbox 360','Xbox','Sega Dreamcast','Sega Saturn','Sega Genesis / Mega Drive','PC (physical)','Other'];
+const EDITIONS = ['Standard',"Collector's",'Limited','Deluxe','Special','Steelbook',"Greatest Hits / Player's Choice",'Other'];
+const CONDITIONS = ['Sealed','Complete in box','Game + case','Game only'];
+const REGIONS = ['NA','EU','JP','Asia','Other'];
 // Usernames that get the "Creator" badge
 const CREATORS = ['aegyoer'];
 // Game-database tags that mean "this is probably a PvP game"
@@ -1067,14 +1177,14 @@ delete DEFAULT_THEME.name;
 const DEFAULT_PROFILE = {
   name:'Player One', handle:'', status:'', bio:'',
   avatar:'', banner:'', bannerStyle:'gradient', avatarShape:'circle',
-  avatarPos:'left', discordId:'', leagueRegion:'na1', tagStyle:'full', hideTagNumbers:false,
+  avatarPos:'left', discordId:'', leagueRegion:'na1', tagStyle:'full', hideTagNumbers:false, alts:[],
   tags:{}, favorites:[],
   pTheme:{ mode:'app', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#ff8fb8', headFont:'grotesk', bodyFont:'inter', bgEffect:'glow' },
-  privacy:{ live:true, followers:true, friends:true, joined:true },
-  sections:[{key:'badges',on:true},{key:'stats',on:true},{key:'steam',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true},{key:'friends',on:true}]
+  privacy:{ live:true, followers:true, friends:true, joined:true, library:true },
+  sections:[{key:'badges',on:true},{key:'stats',on:true},{key:'steam',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true},{key:'collection',on:true},{key:'friends',on:true}]
 };
 
-const KEYS = { games:'checkpoint-data-v1', profile:'checkpoint-profile-v1', theme:'checkpoint-theme-v1' };
+const KEYS = { games:'checkpoint-data-v1', profile:'checkpoint-profile-v1', theme:'checkpoint-theme-v1', collection:'checkpoint-collection-v1' };
 
 
 /* ================================================================
@@ -1187,6 +1297,10 @@ function normalizeProfile(p){
   delete out.frame;
   if (!['full','short','logo'].includes(out.tagStyle)) out.tagStyle = 'full';
   out.hideTagNumbers = !!out.hideTagNumbers;
+  out.alts = (Array.isArray(p.alts) ? p.alts : []).filter(a => a && GAMER_TAGS.some(t => t[0] === a.key)).slice(0, 20).map(a => ({
+    id:String(a.id || uid()), key:a.key, value:String(a.value || '').slice(0, 120),
+    region: LEAGUE_REGIONS.some(r => r[0] === a.region) ? a.region : 'na1'
+  }));
   if (!LEAGUE_REGIONS.some(r => r[0] === out.leagueRegion)) out.leagueRegion = 'na1';
   // Older saves had one "Riot ID" box: use it for League and Valorant
   if (out.tags.riot){ out.tags.league = out.tags.league || out.tags.riot; out.tags.valorant = out.tags.valorant || out.tags.riot; delete out.tags.riot; }
@@ -1219,6 +1333,17 @@ function normalizeTheme(t){
 }
 
 let games   = (load(KEYS.games, []) || []).filter(Boolean).map(normalizeGame);
+function normalizeItem(c){
+  const pick = (v, list, d) => list.includes(v) ? v : d;
+  return {
+    id: String(c.id || uid()), added: Number(c.added) || Date.now(),
+    title: String(c.title || 'Untitled').slice(0, 120),
+    platform: pick(c.platform, PHYS_PLATFORMS, 'Other'), edition: pick(c.edition, EDITIONS, 'Standard'),
+    condition: pick(c.condition, CONDITIONS, 'Complete in box'), region: pick(c.region, REGIONS, 'NA'),
+    notes: String(c.notes || '').slice(0, 300), cover: okCover(c.cover), year: String(c.year || '').slice(0, 10)
+  };
+}
+let collection = (load(KEYS.collection, []) || []).filter(c => c && c.title).map(normalizeItem);
 let profile = normalizeProfile(load(KEYS.profile, null));
 let theme   = normalizeTheme(load(KEYS.theme, null));
 // Account-sync bookkeeping (see section 12)
@@ -1227,6 +1352,7 @@ let syncMeta = load(SYNC_KEY, {}) || {};
 let sb = null, user = null, syncTimer = null, applyingCloud = false, signingIn = false, syncState = 'idle';
 
 const saveGames   = () => { save(KEYS.games, games); markChanged(); };
+const saveCollection = () => { save(KEYS.collection, collection); markChanged(); };
 const saveProfile = () => { save(KEYS.profile, profile); markChanged(); };
 const saveTheme   = () => { save(KEYS.theme, theme); markChanged(); };
 
@@ -1254,7 +1380,7 @@ function applyTheme(){
 /* ================================================================
    5. PAGES (Library, PvP, Profile, Customize)
    ================================================================ */
-const VIEWS = ['library','pvp','profile','customize'];
+const VIEWS = ['library','pvp','collection','profile','customize'];
 let view = 'library';
 let filter = 'all', search = '', sortBy = 'recent';
 
@@ -1285,6 +1411,7 @@ function route(){
   $('view-games').hidden = !(view === 'library' || view === 'pvp');
   $('view-profile').hidden = !(view === 'profile' || view === 'user');
   $('view-customize').hidden = view !== 'customize';
+  $('view-collection').hidden = view !== 'collection';
   render();
 }
 window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
@@ -1294,6 +1421,7 @@ function render(){
   if (view === 'library' || view === 'pvp') renderGamesView();
   else if (view === 'profile') renderProfile();
   else if (view === 'user') renderUserPage();
+  else if (view === 'collection') renderCollection();
   else if (view === 'customize') syncCustomize();
 }
 
@@ -1855,7 +1983,8 @@ let viewedName = '';       // username in the address (#u/name)
 let viewedUser = null;     // the profile being looked at
 let socialCache = {};      // followers / following / friends per person
 let liveCache = {};        // Steam / Discord status
-let currentMeta = null;    // who the profile on screen belongs to
+let currentMeta = null;
+let currentSnap = null;   // the profile on screen (for the library window)    // who the profile on screen belongs to
 let previewSnap = null;    // used while editing so you see changes live
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -1892,7 +2021,8 @@ function buildSnapshot(p = profile){
   const snap = buildSnapshotRaw(p);
   if (JSON.stringify(snap).length > 1200000){
     const strip = x => ({ ...x, cover: String(x.cover).startsWith('data:') ? '' : x.cover });
-    ['playing','favorites','ranks','clips'].forEach(k => { snap[k] = snap[k].map(strip); });
+    ['playing','favorites','ranks','clips','collection','library'].forEach(k => { if (Array.isArray(snap[k])) snap[k] = snap[k].map(strip); });
+    for (const v of Object.values(snap.steamCustom || {})) if (String(v.c).startsWith('data:')) v.c = '';
   }
   return snap;
 }
@@ -1904,7 +2034,7 @@ function buildSnapshotRaw(p){
   return {
     v:1, name:p.name, handle:p.handle, status:p.status, bio:p.bio,
     avatar:p.avatar, banner: p.bannerStyle === 'image' ? p.banner : '',
-    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion, tagStyle:p.tagStyle, hideTagNumbers:p.hideTagNumbers,
+    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion, tagStyle:p.tagStyle, hideTagNumbers:p.hideTagNumbers, alts:p.alts.filter(a => a.value.trim()),
     tags:p.tags, discordId:p.discordId, privacy:p.privacy, sections:p.sections, theme:profileTheme(p),
     stats:{
       games:games.length, completed, rate: finishable ? Math.round(completed / finishable * 100) : null,
@@ -1917,8 +2047,21 @@ function buildSnapshotRaw(p){
     playing: on('playing') ? games.filter(g => g.status === 'playing' || g.status === 'main').slice(0, 12).map(miniData) : [],
     favorites: on('favorites') ? p.favorites.map(findGame).filter(Boolean).map(miniData) : [],
     ranks: on('ranks') ? pvp.filter(g => g.rank || g.peakRank || g.main).slice(0, 12).map(g => ({ ...miniData(g), rank:g.rank, peak:g.peakRank, main:g.main })) : [],
+    // Your own names + pictures for Steam games, so Steam sections show them too
+    steamCustom: Object.fromEntries(games.filter(g => g.steamAppId).slice(0, 400).map(g => [g.steamAppId, {
+      t: g.title, c: g.cover && !/steamstatic\.com\/steam\/apps\/\d+\/header\.jpg$/.test(g.cover) ? g.cover : ''
+    }])),
     clips: on('clips') ? games.flatMap(g => g.clips.map(c => ({ url:c.url, title:c.title, added:c.added, game:g.title, cover:g.cover })))
-                              .sort((a, b) => b.added - a.added).slice(0, 6) : []
+                              .sort((a, b) => b.added - a.added).slice(0, 6) : [],
+    // Your whole library (only if you allow it), with your own names and pictures
+    library: p.privacy.library ? games.slice(0, 800).map(g => ({
+      id:g.id, title:g.title, cover:g.cover, type:g.type, status:g.status, hours:g.hours, verified:g.verified,
+      ach: g.ach ? [g.ach.done, g.ach.total] : null, rank:g.rank, added:g.added
+    })) : null,
+    // Your physical games
+    collection: on('collection') ? collection.slice(0, 800).map(c => ({
+      title:c.title, cover:c.cover, platform:c.platform, edition:c.edition, condition:c.condition, region:c.region, added:c.added
+    })) : []
   };
 }
 
@@ -1938,7 +2081,21 @@ function normalizeSnap(d){
             hours:num(st.hours), items:num(st.items), pvp:num(st.pvp), perfect:num(st.perfect), ranked:!!st.ranked, clips:num(st.clips) },
     playing:list(d.playing, 12).map(mini), favorites:list(d.favorites, 6).map(mini),
     ranks:list(d.ranks, 12).map(r => ({ ...mini(r), rank:str(r.rank, 40), peak:str(r.peak, 40), main:str(r.main, 60) })),
-    clips:list(d.clips, 6).filter(c => safeUrl(c.url)).map(c => ({ url:safeUrl(c.url), title:str(c.title, 80), game:str(c.game, 120), cover:okCover(c.cover), added:num(c.added) }))
+    steamCustom: (() => {
+      const out = {}, src = d.steamCustom && typeof d.steamCustom === 'object' ? d.steamCustom : {};
+      for (const [k, v] of Object.entries(src).slice(0, 400)){
+        if (/^\d{1,9}$/.test(k) && v && typeof v === 'object') out[k] = { t:str(v.t, 120), c:okCover(v.c) };
+      }
+      return out;
+    })(),
+    clips:list(d.clips, 6).filter(c => safeUrl(c.url)).map(c => ({ url:safeUrl(c.url), title:str(c.title, 80), game:str(c.game, 120), cover:okCover(c.cover), added:num(c.added) })),
+    library: Array.isArray(d.library) ? list(d.library, 800).map(g => {
+      const type = g.type === 'pvp' ? 'pvp' : 'story', statuses = type === 'pvp' ? PVP_STATUS : STORY_STATUS;
+      return { id:'', title:str(g.title, 120), cover:okCover(g.cover), type, status: statuses[g.status] ? g.status : Object.keys(statuses)[0],
+               hours:num(g.hours), verified:!!g.verified, rank:str(g.rank, 40), added:num(g.added),
+               ach: Array.isArray(g.ach) && num(g.ach[1]) > 0 ? [Math.min(num(g.ach[0]), num(g.ach[1])), num(g.ach[1])] : null };
+    }) : null,
+    collection: list(d.collection, 800).map(normalizeItem).map(c => ({ ...c, id:'' }))
   };
 }
 
@@ -2064,8 +2221,8 @@ function sectionHTML(key, s, m){
     return `<div class="steam-box">
       <div class="steam-head">${logoHTML('steam', 'Steam')}<div><b class="verified">✓ Verified Steam account</b>
         <small>${esc(st.name || '')} · ${st.count} games · ${total.toLocaleString()} hours</small></div></div>
-      <div class="steam-top">${top.map(g => `<div class="steam-game"><img src="${steamHeader(g.appid)}" alt="" loading="lazy">
-        <div><b>${esc(g.name)}</b><small>${g.hours.toLocaleString()} hours${st.ach && st.ach[g.appid] ? ` · 🏆 ${st.ach[g.appid].done}/${st.ach[g.appid].total}` : ''}${g.recent ? ` · ${g.recent}h last 2 wks` : ''}</small></div></div>`).join('')}</div>
+      <div class="steam-top">${top.map(g => { const my = (s.steamCustom || {})[g.appid] || {}; return `<div class="steam-game"><img src="${esc(my.c || steamHeader(g.appid))}" alt="" loading="lazy">
+        <div><b>${esc(my.t || g.name)}</b><small>${g.hours.toLocaleString()} hours${st.ach && st.ach[g.appid] ? ` · 🏆 ${st.ach[g.appid].done}/${st.ach[g.appid].total}` : ''}${g.recent ? ` · ${g.recent}h last 2 wks` : ''}</small></div></div>`; }).join('')}</div>
     </div>`;
   }
   if (key === 'stats'){
@@ -2073,11 +2230,15 @@ function sectionHTML(key, s, m){
     const sv = m.steam && m.steam.linked && !m.steam.private ? m.steam : null;
     // With Steam connected, show achievements from Steam instead of checklist items
     const fifth = sv
-      ? ['Achievements <span class="verified" title="Counted from all your Steam games">✓</span>', sv.stats ? sv.stats.unlocked.toLocaleString() : '…']
-      : ['Checklist items', st.items];
-    const items = [['Games', st.games], ['Completed', st.completed], ['Completion rate', st.rate == null ? '—' : st.rate + '%'],
-                   ['Hours played', st.hours], fifth, ['PvP games', st.pvp]];
-    return `<div class="stats p-stats">${items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
+      ? ['Achievements <span class="verified" title="Counted from all your Steam games">✓</span>', sv.stats ? sv.stats.unlocked.toLocaleString() : '…', 'ach']
+      : ['Checklist items', st.items, ''];
+    const items = [['Games', st.games, 'all'], ['Completed', st.completed, 'completed'], ['Completion rate', st.rate == null ? '—' : st.rate + '%', ''],
+                   ['Hours played', st.hours, 'hours'], fifth, ['PvP games', st.pvp, 'pvp']];
+    const canBrowse = m.isMe || Array.isArray(s.library);
+    // Tap a number to see the games behind it
+    return `<div class="stats p-stats">${items.map(([l, v, lib]) => lib && canBrowse
+      ? `<button class="stat stat-btn" data-lib="${lib}" title="See these games"><b>${v}</b><span>${l}</span></button>`
+      : `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
   }
   if (key === 'playing')   return s.playing.length ? `<div class="minis">${s.playing.map(x => miniCardHTML(x, m.isMe)).join('')}</div>` : '';
   if (key === 'favorites') return s.favorites.length ? `<div class="minis">${s.favorites.map(x => miniCardHTML(x, m.isMe)).join('')}</div>` : '';
@@ -2091,6 +2252,14 @@ function sectionHTML(key, s, m){
       </${tag}>`; }).join('')}</div>` : '';
   }
   if (key === 'clips') return s.clips.length ? `<div class="clips">${s.clips.map(clipCardHTML).join('')}</div>` : '';
+  if (key === 'collection'){
+    const list = s.collection || [];
+    if (!list.length) return '';
+    const shown = [...list].sort((a, b) => b.added - a.added).slice(0, 12);
+    return `<div class="minis">${shown.map(c => `<div class="mini"><div class="mini-cover" style="--h:${hueFor(c.title)}">${c.cover ? `<img src="${esc(sized(c.cover, 420))}" data-full="${esc(c.cover)}" alt="" loading="lazy">` : `<span>${esc(initials(c.title))}</span>`}${c.condition === 'Sealed' ? '<em class="badge" style="color:var(--c-wishlist)">✦ Sealed</em>' : ''}</div>
+      <div class="mini-t">${esc(c.title)}</div><div class="meta">${esc(c.platform)}${c.edition !== 'Standard' ? ' · ' + esc(c.edition) : ''}</div></div>`).join('')}</div>
+      <div style="margin-top:10px"><button class="btn small" data-lib="collection">See all ${list.length} →</button></div>`;
+  }
   if (key === 'friends'){
     if (!priv('friends') || !m.friends || !m.friends.length) return '';
     return `<div class="people">${m.friends.map(personHTML).join('')}</div>`;
@@ -2127,15 +2296,20 @@ function profileHTML(s, m){
   }
 
   const steamOk = m.steam && m.steam.linked;
-  const tags = GAMER_TAGS.filter(([k]) => s.tags[k] || (k === 'steam' && steamOk)).map(([k, label]) => {
-    const verifiedSteam = k === 'steam' && steamOk;
-    const link = verifiedSteam ? `https://steamcommunity.com/profiles/${m.steam.steamid}` : tagLink(k, s.tags[k], s);
-    const region = k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === s.leagueRegion) || ['', 'NA'])[1])}</small>` : '';
-    const text = (verifiedSteam ? esc(m.steam.name || tagText(k, s.tags[k] || '', s)) + ' <span class="verified" title="Verified through Steam sign-in">✓</span>' : esc(tagText(k, s.tags[k], s))) + region;
+  const pill = (k, label, value, ctx, verifiedSteam, extraCls = '') => {
+    const link = verifiedSteam ? `https://steamcommunity.com/profiles/${m.steam.steamid}` : tagLink(k, value, ctx);
+    const region = k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === ctx.leagueRegion) || ['', 'NA'])[1])}</small>` : '';
+    const text = (verifiedSteam ? esc(m.steam.name || tagText(k, value || '', ctx)) + ' <span class="verified" title="Verified through Steam sign-in">✓</span>' : esc(tagText(k, value, ctx))) + region;
     const name = s.tagStyle === 'logo' ? logoHTML(k, label) : `<small>${esc(s.tagStyle === 'short' ? TAG_SHORT[k] : label)}</small>`;
     return link
-      ? `<a class="tag" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(label)}">${name}${text}<span class="go">↗</span></a>`
-      : `<button class="tag" data-copy="${esc(s.tags[k])}" title="${esc(label)}: click to copy">${name}${text}</button>`;
+      ? `<a class="tag ${extraCls}" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(label)}">${name}${text}<span class="go">↗</span></a>`
+      : `<button class="tag ${extraCls}" data-copy="${esc(value)}" title="${esc(label)}: click to copy">${name}${text}</button>`;
+  };
+  const tags = GAMER_TAGS.filter(([k]) => s.tags[k] || (k === 'steam' && steamOk))
+    .map(([k, label]) => pill(k, label, s.tags[k], s, k === 'steam' && steamOk)).join('');
+  const alts = (s.alts || []).map(a => {
+    const label = (GAMER_TAGS.find(t => t[0] === a.key) || ['', a.key])[1];
+    return pill(a.key, label, a.value, { ...s, leagueRegion:a.region, tags:{} }, false, 'alt');
   }).join('');
 
   const sections = s.sections.filter(x => x.on).map(x => {
@@ -2160,6 +2334,7 @@ function profileHTML(s, m){
       ${meta.length ? `<div class="p-meta">${meta.join('')}</div>` : ''}
       ${s.bio ? `<p class="p-bio">${esc(s.bio)}</p>` : ''}
       ${tags ? `<div class="tags">${tags}</div>` : ''}
+      ${alts ? `<div class="alts"><span class="alts-label">Alt accounts</span>${alts}</div>` : ''}
     </div>
     ${sections || (m.isMe ? `<div class="empty" style="margin-top:20px"><p>Add some games and your profile fills up with badges, stats, favorites, ranks and clips.</p></div>` : '')}
   </div>`;
@@ -2178,6 +2353,7 @@ function paintProfile(snap, meta){
     if (c && c.data) meta.steam = c.data;
   }
   currentMeta = meta;
+  currentSnap = snap;
   $('pBody').innerHTML = profileHTML(snap, meta);
   hydrateLogos($('pBody'));
   paintLive(snap, meta);
@@ -2336,12 +2512,15 @@ async function fetchLive(key){
   const box = $('liveBox');
   if (box && box.dataset.keys && box.dataset.keys.split(',').includes(key)) fillLive(box, box.dataset.keys.split(','), box.dataset.me === '1');
 }
+let liveCustom = {};   // the profile owner's names/pictures for Steam games
 function liveCardHTML(d, isMe){
   if (d.kind === 'steam'){
+    const my = (d.gameId && liveCustom[d.gameId]) || {};
     if (d.private && isMe) return `<div class="live-card"><span class="dot"></span><div><small>Steam</small><b>Set your Steam profile to Public to show your game</b></div></div>`;
     if (d.game){
-      const img = d.gameId ? `<img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${d.gameId}/header.jpg" alt="">` : '<span class="dot"></span>';
-      return `<div class="live-card st-ingame">${img}<div><small>Playing on Steam</small><b>${esc(d.game)}</b></div></div>`;
+      const pic = my.c || (d.gameId ? steamHeader(d.gameId) : '');
+      const img = pic ? `<img src="${esc(pic)}" alt="">` : '<span class="dot"></span>';
+      return `<div class="live-card st-ingame">${img}<div><small>Playing on Steam</small><b>${esc(my.t || d.game)}</b></div></div>`;
     }
     const st = d.state === 'online' ? 'st-online' : d.state === 'offline' ? '' : 'st-idle';
     const label = d.state === 'offline' ? 'Offline' : d.state[0].toUpperCase() + d.state.slice(1);
@@ -2358,6 +2537,7 @@ function fillLive(box, keys, isMe){
   box.hidden = !box.innerHTML.trim();
 }
 function paintLive(s, m){
+  liveCustom = s.steamCustom || {};
   const box = $('liveBox');
   if (!box) return;
   const keys = liveKeys(s, m);
@@ -2580,9 +2760,9 @@ function openProfileEditor(){
   $('pDiscordId').value = draft.discordId;
   document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
   $('pvLive').checked = draft.privacy.live; $('pvFollowers').checked = draft.privacy.followers;
-  $('pvFriends').checked = draft.privacy.friends; $('pvJoined').checked = draft.privacy.joined;
+  $('pvFriends').checked = draft.privacy.friends; $('pvJoined').checked = draft.privacy.joined; $('pvLibrary').checked = draft.privacy.library;
   syncPThemeInputs();
-  renderImgPreviews(); renderSectionEditor();
+  renderImgPreviews(); renderSectionEditor(); renderAltEditor();
   profileDlg.showModal();
 }
 function syncPThemeInputs(){
@@ -2604,7 +2784,7 @@ function readProfileForm(){
   draft.discordId = $('pDiscordId').value.trim();
   draft.tags = {};
   document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
-  draft.privacy = { live:$('pvLive').checked, followers:$('pvFollowers').checked, friends:$('pvFriends').checked, joined:$('pvJoined').checked };
+  draft.privacy = { live:$('pvLive').checked, followers:$('pvFollowers').checked, friends:$('pvFriends').checked, joined:$('pvJoined').checked, library:$('pvLibrary').checked };
 }
 function previewDraft(){
   if (view !== 'profile') return;
@@ -2648,6 +2828,39 @@ function renderImgPreviews(){
   $('pAvatarPrev').style.backgroundImage = draft.avatar ? `url("${draft.avatar}")` : '';
   $('pBannerPrev').style.backgroundImage = draft.banner ? `url("${draft.banner}")` : '';
 }
+function renderAltEditor(){
+  const opts = GAMER_TAGS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('');
+  $('pAlts').innerHTML = draft.alts.length ? draft.alts.map((a, i) => `
+    <div class="alt-row">
+      <select data-alt-key="${i}" aria-label="Platform">${opts}</select>
+      <input type="text" data-alt-val="${i}" value="${esc(a.value)}" maxlength="120" placeholder="${esc((TAG_HELP[a.key] || ['', 'Name or link'])[1] || 'Name or link')}" aria-label="Alt account">
+      ${a.key === 'league' ? `<select data-alt-region="${i}" aria-label="Region">${LEAGUE_REGIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>` : '<span></span>'}
+      <button type="button" class="del" data-alt-del="${i}" aria-label="Remove">✕</button>
+    </div>`).join('') : '<p class="hint">No alts yet.</p>';
+  draft.alts.forEach((a, i) => {
+    $('pAlts').querySelector(`[data-alt-key="${i}"]`).value = a.key;
+    const r = $('pAlts').querySelector(`[data-alt-region="${i}"]`); if (r) r.value = a.region;
+  });
+}
+$('pAltAdd').addEventListener('click', () => {
+  if (draft.alts.length >= 20) return toast('Up to 20 alt accounts');
+  draft.alts.push({ id:uid(), key:'league', value:'', region:'na1' });
+  renderAltEditor();
+  $('pAlts').querySelector(`[data-alt-val="${draft.alts.length - 1}"]`).focus();
+});
+$('pAlts').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.altVal !== undefined){ draft.alts[+t.dataset.altVal].value = t.value; previewDraft(); }
+});
+$('pAlts').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.altKey !== undefined){ draft.alts[+t.dataset.altKey].key = t.value; renderAltEditor(); previewDraft(); }
+  if (t.dataset.altRegion !== undefined){ draft.alts[+t.dataset.altRegion].region = t.value; previewDraft(); }
+});
+$('pAlts').addEventListener('click', e => {
+  const b = e.target.closest('[data-alt-del]'); if (!b) return;
+  draft.alts.splice(+b.dataset.altDel, 1); renderAltEditor(); previewDraft();
+});
 function renderSectionEditor(){
   const last = draft.sections.length - 1;
   $('pSections').innerHTML = draft.sections.map((s, i) => `
@@ -3094,6 +3307,212 @@ $('dAchToList').addEventListener('click', () => {
 
 
 /* ================================================================
+   9c. PHYSICAL COLLECTION (its own tab, also shown on your profile)
+   ================================================================ */
+let colFilter = 'all', colSearchText = '', colSortBy = 'recent';
+fillSelect($('colPlatform'), PHYS_PLATFORMS.map(x => [x, x]));
+fillSelect($('colEdition'), EDITIONS.map(x => [x, x]));
+fillSelect($('colCondition'), CONDITIONS.map(x => [x, x]));
+fillSelect($('colRegion'), REGIONS.map(x => [x, x]));
+
+function renderCollection(){
+  const sealed = collection.filter(c => c.condition === 'Sealed').length;
+  const special = collection.filter(c => c.edition !== 'Standard').length;
+  const consoles = new Set(collection.map(c => c.platform)).size;
+  $('colStats').innerHTML = [['Games owned', collection.length], ['Consoles', consoles], ['Sealed', sealed], ['Special editions', special]]
+    .map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  const counts = {};
+  collection.forEach(c => { counts[c.platform] = (counts[c.platform] || 0) + 1; });
+  if (colFilter !== 'all' && !counts[colFilter]) colFilter = 'all';
+  $('colChips').innerHTML = [['all', 'All', collection.length], ...PHYS_PLATFORMS.filter(p => counts[p]).map(p => [p, p, counts[p]])]
+    .map(([k, label, n]) => `<button class="chip ${colFilter === k ? 'active' : ''}" data-colf="${esc(k)}">${esc(label)}<small>${n}</small></button>`).join('');
+  if (!collection.length){
+    $('colGrid').innerHTML = `<div class="empty"><h2>Your shelf is empty</h2><p>Add the physical games you own: discs, cartridges, collector's editions.</p>
+      <button class="btn primary" type="button" id="colFirst">+ Add your first game</button></div>`;
+    $('colFirst').addEventListener('click', () => openCollForm());
+    return;
+  }
+  const sorters = { recent:(a, b) => b.added - a.added, title:(a, b) => a.title.localeCompare(b.title),
+                    platform:(a, b) => PHYS_PLATFORMS.indexOf(a.platform) - PHYS_PLATFORMS.indexOf(b.platform) || a.title.localeCompare(b.title) };
+  const list = collection.filter(c => (colFilter === 'all' || c.platform === colFilter) && c.title.toLowerCase().includes(colSearchText)).sort(sorters[colSortBy]);
+  $('colGrid').innerHTML = list.length ? list.map(c => `<button class="card" data-coll="${esc(c.id)}">
+      ${coverHTML({ title:c.title, cover:c.cover }, 'cover tall', `<em class="badge">${esc(c.platform)}</em>${c.condition === 'Sealed' ? '<em class="clipcount" style="color:var(--c-wishlist)">✦ Sealed</em>' : ''}`)}
+      <div class="card-body"><h3 title="${esc(c.title)}">${esc(c.title)}</h3>
+        <div class="meta">${esc([c.edition !== 'Standard' ? c.edition : '', c.condition, c.region].filter(Boolean).join(' · '))}</div></div>
+    </button>`).join('') : '<div class="empty"><p>Nothing matches that search or console.</p></div>';
+}
+$('colChips').addEventListener('click', e => { const c = e.target.closest('[data-colf]'); if (c){ colFilter = c.dataset.colf; renderCollection(); } });
+$('colSearch').addEventListener('input', e => { colSearchText = e.target.value.trim().toLowerCase(); renderCollection(); });
+$('colSort').addEventListener('change', e => { colSortBy = e.target.value; renderCollection(); });
+
+/* ---------- Add / edit a physical game ---------- */
+const collDlg = $('collDlg');
+let colEditing = null, colPicked = null;
+function renderColPicked(){
+  const box = $('colPicked');
+  if (!colPicked || !colPicked.cover){ box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = `<img src="${esc(sized(colPicked.cover, 420))}" data-full="${esc(colPicked.cover)}" alt="">
+    <div><b>${esc(colPicked.name || $('colTitle').value)}</b><span class="meta">${esc(colPicked.custom ? 'Your own picture' : [colPicked.year, 'Picture found'].filter(Boolean).join(' · '))}</span></div>
+    <button type="button" class="x" id="colUnpick" aria-label="Remove picture">×</button>`;
+}
+$('colPicked').addEventListener('click', e => { if (e.target.id === 'colUnpick'){ colPicked = null; renderColPicked(); } });
+function openCollForm(id = null){
+  const c = id ? collection.find(x => x.id === id) : null;
+  colEditing = c ? c.id : null;
+  $('collTitle').textContent = c ? 'Edit collection item' : 'Add to collection';
+  $('colSave').textContent = c ? 'Save changes' : 'Add to collection';
+  $('colDelete').hidden = !c;
+  $('colTitle').value = c ? c.title : '';
+  $('colPlatform').value = c ? c.platform : 'PlayStation 5';
+  $('colEdition').value = c ? c.edition : 'Standard';
+  $('colCondition').value = c ? c.condition : 'Complete in box';
+  $('colRegion').value = c ? c.region : 'NA';
+  $('colNotes').value = c ? c.notes : '';
+  colPicked = c && c.cover ? { name:c.title, cover:c.cover, year:c.year, custom:String(c.cover).startsWith('data:') || /\/media\//.test(c.cover) } : null;
+  renderColPicked(); hideColSug();
+  collDlg.showModal();
+  $('colTitle').focus();
+}
+$('colPicBtn').addEventListener('click', () => $('colPicFile').click());
+$('colPicFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  toast('Uploading…');
+  try { colPicked = { name:$('colTitle').value.trim(), cover: await storeImage(f, { maxW:800, maxH:800, kind:'collection' }), custom:true }; renderColPicked(); toast('Picture added ♡'); }
+  catch(err){ toast(err.message || "That picture couldn't be loaded"); }
+});
+$('collForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('colTitle').value.trim();
+  if (!title) return;
+  const data = { title, platform:$('colPlatform').value, edition:$('colEdition').value, condition:$('colCondition').value,
+                 region:$('colRegion').value, notes:$('colNotes').value.trim(), cover: colPicked ? colPicked.cover : '', year: colPicked ? colPicked.year || '' : '' };
+  if (colEditing){
+    const i = collection.findIndex(x => x.id === colEditing);
+    collection[i] = normalizeItem({ ...collection[i], ...data });
+  } else {
+    collection.push(normalizeItem({ ...data, id:uid(), added:Date.now() }));
+  }
+  saveCollection();
+  collDlg.close();
+  if (view !== 'collection'){ location.hash = 'collection'; } else render();
+  toast(colEditing ? 'Saved' : 'Added to your collection ♡');
+});
+$('colDelete').addEventListener('click', () => {
+  const c = collection.find(x => x.id === colEditing);
+  if (!c || !confirm(`Remove "${c.title}" from your collection?`)) return;
+  collection = collection.filter(x => x.id !== colEditing);
+  saveCollection(); collDlg.close(); render();
+});
+
+// Game search for the collection (same search as games)
+const colSug = $('colSuggest');
+let colResults = [], colTimer = null, colAbort = null;
+function hideColSug(){ colSug.hidden = true; colSug.innerHTML = ''; }
+$('colTitle').addEventListener('input', () => {
+  const q = $('colTitle').value.trim();
+  clearTimeout(colTimer);
+  if (q.length < 2) return hideColSug();
+  colTimer = setTimeout(async () => {
+    if (colAbort) colAbort.abort();
+    colAbort = new AbortController();
+    colSug.innerHTML = '<div class="sug-msg">Searching…</div>'; colSug.hidden = false;
+    try {
+      colResults = RAWG_KEY ? await searchRawg(q, colAbort.signal) : await searchWikipedia(q, colAbort.signal);
+      colSug.innerHTML = colResults.length ? colResults.map((r, i) => `<button type="button" class="sug" data-i="${i}">
+          ${r.image ? `<img src="${esc(sized(r.image, 200))}" data-full="${esc(r.image)}" alt="">` : '<span class="sug-ph"></span>'}
+          <div><b>${esc(r.name)}</b><small>${esc([r.year, r.info].filter(Boolean).join(' · '))}</small></div></button>`).join('')
+        : '<div class="sug-msg">No matches. You can still add it by name.</div>';
+    } catch(err){ if (err.name !== 'AbortError') colSug.innerHTML = "<div class='sug-msg'>Couldn't search right now.</div>"; }
+  }, 350);
+});
+colSug.addEventListener('mousedown', e => e.preventDefault());
+colSug.addEventListener('click', e => {
+  const b = e.target.closest('.sug'); if (!b) return;
+  const r = colResults[+b.dataset.i];
+  $('colTitle').value = r.name;
+  if (!colPicked || !colPicked.custom) colPicked = { name:r.name, cover:r.image, year:r.year === 'Upcoming' ? '' : r.year };
+  hideColSug(); renderColPicked();
+});
+$('colTitle').addEventListener('blur', () => setTimeout(hideColSug, 120));
+
+
+/* ================================================================
+   9d. LIBRARY WINDOW: tap a stat on a profile to see the games
+   ================================================================ */
+const libDlg = $('libDlg');
+let libState = { tab:'games', filter:'all', sort:'recent', q:'' };
+function libSource(){
+  const s = currentSnap || {};
+  const lib = currentMeta && currentMeta.isMe
+    ? games.map(g => ({ id:g.id, title:g.title, cover:g.cover, type:g.type, status:g.status, hours:g.hours, verified:g.verified, ach:g.ach ? [g.ach.done, g.ach.total] : null, rank:g.rank, added:g.added }))
+    : (s.library || []);
+  const col = currentMeta && currentMeta.isMe ? collection : (s.collection || []);
+  return { lib, col };
+}
+function openLibrary(kind){
+  const { lib, col } = libSource();
+  const presets = { all:['games','all','recent'], completed:['games','completed','recent'], hours:['games','all','hours'],
+                    ach:['games','all','ach'], pvp:['games','pvp','recent'], collection:['collection','all','recent'] };
+  const [tab, filter, sort] = presets[kind] || presets.all;
+  libState = { tab, filter, sort, q:'' };
+  $('libSearch').value = '';
+  const who = currentMeta && currentMeta.isMe ? 'Your' : (currentSnap && currentSnap.name ? currentSnap.name + "'s" : 'Their');
+  $('libTitle').textContent = `${who} library`;
+  $('libTabs').innerHTML = `<button class="chip" data-libtab="games">🎮 Games <small>${lib.length}</small></button>` +
+    (col.length ? `<button class="chip" data-libtab="collection">📀 Physical <small>${col.length}</small></button>` : '');
+  renderLibrary();
+  if (!libDlg.open) libDlg.showModal();
+}
+function renderLibrary(){
+  const { lib, col } = libSource();
+  const st = libState;
+  document.querySelectorAll('#libTabs .chip').forEach(c => c.classList.toggle('active', c.dataset.libtab === st.tab));
+  const isMe = currentMeta && currentMeta.isMe;
+  if (st.tab === 'collection'){
+    fillSelect($('libSort'), [['recent','Recently added'], ['title','A → Z'], ['platform','By console']]);
+    $('libSort').value = ['recent','title','platform'].includes(st.sort) ? st.sort : 'recent';
+    const counts = {};
+    col.forEach(c => { counts[c.platform] = (counts[c.platform] || 0) + 1; });
+    $('libChips').innerHTML = [['all','All'], ...Object.keys(counts).map(p => [p, p])]
+      .map(([k, l]) => `<button class="chip ${st.filter === k ? 'active' : ''}" data-libf="${esc(k)}">${esc(l)}</button>`).join('');
+    const sorters = { recent:(a, b) => b.added - a.added, title:(a, b) => a.title.localeCompare(b.title), platform:(a, b) => a.platform.localeCompare(b.platform) };
+    const list = col.filter(c => (st.filter === 'all' || c.platform === st.filter) && c.title.toLowerCase().includes(st.q)).sort(sorters[$('libSort').value]);
+    $('libGrid').innerHTML = list.map(c => `<${isMe ? 'button' : 'div'} class="lib-item" ${isMe ? `data-coll="${esc(c.id)}"` : ''}>
+        ${coverHTML({ title:c.title, cover:c.cover }, 'mini-cover', c.condition === 'Sealed' ? '<em class="badge" style="color:var(--c-wishlist)">✦ Sealed</em>' : '', true)}
+        <b>${esc(c.title)}</b><span class="meta">${esc(c.platform)}${c.edition !== 'Standard' ? ' · ' + esc(c.edition) : ''}</span></${isMe ? 'button' : 'div'}>`).join('')
+      || '<p class="hint">Nothing here.</p>';
+    return;
+  }
+  fillSelect($('libSort'), [['recent','Recently added'], ['hours','Most hours'], ['ach','Most achievements'], ['title','A → Z']]);
+  $('libSort').value = ['recent','hours','ach','title'].includes(st.sort) ? st.sort : 'recent';
+  const chips = [['all','All'], ['story','Completable'], ['pvp','PvP'], ['playing','Playing'], ['completed','Completed'], ['backlog','Backlog']];
+  $('libChips').innerHTML = chips.map(([k, l]) => `<button class="chip ${st.filter === k ? 'active' : ''}" data-libf="${k}">${l}</button>`).join('');
+  const match = g => st.filter === 'all' || (st.filter === 'story' || st.filter === 'pvp' ? g.type === st.filter : g.status === st.filter || (st.filter === 'playing' && g.status === 'main'));
+  const achPct = g => g.ach ? g.ach[0] / g.ach[1] : -1;
+  const sorters = { recent:(a, b) => b.added - a.added, hours:(a, b) => b.hours - a.hours, ach:(a, b) => achPct(b) - achPct(a) || b.hours - a.hours, title:(a, b) => a.title.localeCompare(b.title) };
+  const list = lib.filter(g => match(g) && g.title.toLowerCase().includes(st.q)).sort(sorters[$('libSort').value]);
+  $('libGrid').innerHTML = list.map(g => {
+    const label = (g.type === 'pvp' ? PVP_STATUS : STORY_STATUS)[g.status] || '';
+    const bits = [label, g.hours ? (g.verified ? '✓ ' : '') + g.hours + 'h' : '', g.ach ? `🏆 ${g.ach[0]}/${g.ach[1]}` : '', g.rank || ''].filter(Boolean).join(' · ');
+    return `<${isMe ? 'button' : 'div'} class="lib-item" ${isMe ? `data-libopen="${esc(g.id)}"` : ''}>
+      ${coverHTML({ title:g.title, cover:g.cover }, 'mini-cover', '', true)}
+      <b title="${esc(g.title)}">${esc(g.title)}</b><span class="meta">${esc(bits)}</span></${isMe ? 'button' : 'div'}>`;
+  }).join('') || '<p class="hint">No games here.</p>';
+}
+$('libTabs').addEventListener('click', e => { const c = e.target.closest('[data-libtab]'); if (c){ libState.tab = c.dataset.libtab; libState.filter = 'all'; libState.sort = 'recent'; renderLibrary(); } });
+$('libChips').addEventListener('click', e => { const c = e.target.closest('[data-libf]'); if (c){ libState.filter = c.dataset.libf; renderLibrary(); } });
+$('libSort').addEventListener('change', e => { libState.sort = e.target.value; renderLibrary(); });
+$('libSearch').addEventListener('input', e => { libState.q = e.target.value.trim().toLowerCase(); renderLibrary(); });
+$('libGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-libopen]');
+  if (b){ libDlg.close(); openDetail(b.dataset.libopen); }
+  if (e.target.closest('[data-coll]')) libDlg.close();
+});
+
+
+/* ================================================================
    10. CUSTOMIZE PAGE
    ================================================================ */
 $('presets').innerHTML = Object.entries(PRESETS).map(([k, p]) => `
@@ -3134,7 +3553,7 @@ $('cReset').addEventListener('click', () => { theme = normalizeTheme(null); them
 
 /* ---------- Backups ---------- */
 $('cExport').addEventListener('click', () => {
-  const data = { app:'checkpoint', version:2, exported:new Date().toISOString(), games, profile, theme };
+  const data = { app:'checkpoint', version:2, exported:new Date().toISOString(), games, profile, theme, collection };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -3152,6 +3571,7 @@ $('cImportFile').addEventListener('change', async e => {
     if (!Array.isArray(list)) throw new Error('bad file');
     if (!confirm(`Replace your current data with this backup (${list.length} games)?`)) return;
     games = list.filter(g => g && g.title).map(normalizeGame);
+    if (!Array.isArray(data) && Array.isArray(data.collection)){ collection = data.collection.filter(c => c && c.title).map(normalizeItem); save(KEYS.collection, collection); }
     if (!Array.isArray(data) && data.profile) profile = normalizeProfile(data.profile);
     if (!Array.isArray(data) && data.theme) theme = normalizeTheme(data.theme);
     saveGames(); saveProfile(); saveTheme(); applyTheme(); render();
@@ -3177,7 +3597,7 @@ $('cErase').addEventListener('click', async () => {
 /* ================================================================
    11. CLICKS THAT WORK ANYWHERE ON THE PAGE
    ================================================================ */
-$('addBtn').addEventListener('click', () => openForm(null, mode()));
+$('addBtn').addEventListener('click', () => view === 'collection' ? openCollForm() : openForm(null, mode()));
 $('search').addEventListener('input', e => { search = e.target.value.trim().toLowerCase(); renderGrid(); });
 $('sort').addEventListener('change', e => { sortBy = e.target.value; renderGrid(); });
 $('chips').addEventListener('click', e => {
@@ -3203,6 +3623,10 @@ document.addEventListener('click', e => {
   }
   const open = t.closest('[data-open]');
   if (open) return openDetail(open.dataset.open);
+  const lib = t.closest('[data-lib]');
+  if (lib) return openLibrary(lib.dataset.lib);
+  const coll = t.closest('[data-coll]');
+  if (coll) return openCollForm(coll.dataset.coll);
   const action = t.closest('[data-action]');
   if (action && action.dataset.action === 'add') return openForm(null, mode());
   if (action && action.dataset.action === 'edit-profile') return openProfileEditor();
@@ -3256,7 +3680,7 @@ async function pushNow(){
   setSync('saving');
   const { error } = await sb.from('checkpoint_data').upsert({
     user_id: user.id,
-    data: { app:'checkpoint', version:2, games, profile, theme },
+    data: { app:'checkpoint', version:2, games, profile, theme, collection },
     updated_at: now
   });
   if (error){ console.error(error); setSync('error'); return false; }
@@ -3282,6 +3706,8 @@ function applyCloud(row){
   const d = row.data || {};
   applyingCloud = true;
   games = (Array.isArray(d.games) ? d.games : []).filter(g => g && g.title).map(normalizeGame);
+  collection = (Array.isArray(d.collection) ? d.collection : []).filter(c => c && c.title).map(normalizeItem);
+  save(KEYS.collection, collection);
   profile = normalizeProfile(d.profile);
   theme = normalizeTheme(d.theme);
   saveGames(); saveProfile(); saveTheme();
