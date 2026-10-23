@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 30" width="600" height="30">
+  <style>
+    .tw{animation:tw 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes tw{0%,100%{opacity:.35;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+  </style>
+  <defs>
+    <path id="h" d="M0 -3 c-2 -4 -8 -3.4 -8 1.4 c0 4 8 8 8 8 c0 0 8 -4 8 -8 c0 -4.8 -6 -5.4 -8 -1.4z"/>
+    <path id="s" d="M0 -7 L1.7 -1.7 L7 0 L1.7 1.7 L0 7 L-1.7 1.7 L-7 0 L-1.7 -1.7Z"/>
+  </defs>
+  <line x1="20" y1="15" x2="250" y2="15" stroke="#f4b6d0" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/>
+  <line x1="350" y1="15" x2="580" y2="15" stroke="#cdb8f0" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/>
+  <g transform="translate(265 15)"><use class="tw" href="#s" fill="#b48ad8" style="animation-delay:0s"/></g>
+  <g transform="translate(300 13)"><use class="tw" href="#h" fill="#ff8fb8" style="animation-delay:.4s"/></g>
+  <g transform="translate(335 15)"><use class="tw" href="#s" fill="#7fd8d2" style="animation-delay:.8s"/></g>
+</svg>
