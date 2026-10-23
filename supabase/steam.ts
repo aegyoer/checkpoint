@@ -28,7 +28,15 @@ function adminKey(): string {
   } catch { return ""; }
 }
 const ADMIN_KEY = adminKey();
-const admin = createClient(SB_URL, ADMIN_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+// Made only when needed, so the helper still starts even if a key is missing
+let _admin: ReturnType<typeof createClient> | null = null;
+const admin = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_t, prop) {
+    if (!ADMIN_KEY) throw new Error("Supabase admin key missing");
+    _admin ??= createClient(SB_URL, ADMIN_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+    return (_admin as any)[prop];
+  },
+});
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -91,7 +99,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const url = new URL(req.url);
   const q = url.searchParams;
-  const action = q.get("action") ?? "status";
+  const action = q.get("action") ?? "hello";
+  if (action === "hello") {
+    return json({ ok: true, message: "The Checkpoint Steam helper is running ♡", steamKey: STEAM_KEY ? "set" : "MISSING: add STEAM_API_KEY in Edge Functions → Secrets", adminKey: ADMIN_KEY ? "set" : "missing" });
+  }
 
   try {
     if (!STEAM_KEY) return json({ error: "STEAM_API_KEY secret is not set" }, 500);
@@ -221,7 +232,7 @@ Deno.serve(async (req) => {
     }
 
     return json({ error: "unknown action" }, 400);
-  } catch (_err) {
-    return json({ error: "Steam didn't answer, try again" }, 502);
+  } catch (err) {
+    return json({ error: "Something went wrong: " + String((err as Error)?.message ?? err) }, 502);
   }
 });
