@@ -1087,7 +1087,7 @@ function esc(s){
 }
 // Only allow normal web links (blocks sneaky "javascript:" links)
 // Game pictures can be a web link or a picture you uploaded (kept small)
-function okCover(v){ return (typeof v === 'string' && v.startsWith('data:image/') && v.length < 200000) ? v : safeUrl(v); }
+function okCover(v){ return (typeof v === 'string' && v.startsWith('data:image/') && v.length < 3000000) ? v : safeUrl(v); }
 function safeUrl(u){
   try { const x = new URL(String(u || '')); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; }
   catch(e){ return ''; }
@@ -1458,11 +1458,12 @@ $('fPicFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   try {
-    const cover = await readImage(f, 640, 400, false);
+    toast('Uploading…');
+    const cover = await storeImage(f, { maxW:800, maxH:800, kind:'cover' });
     picked = { ...(picked || { genres:[], released:'', rawgId:null }), name: $('fTitle').value.trim() || 'Your picture', cover, custom:true };
     renderPicked();
     toast('Picture added ♡');
-  } catch(err){ toast("That picture couldn't be loaded"); }
+  } catch(err){ toast(err.message || "That picture couldn't be loaded"); }
 });
 
 $('gameForm').addEventListener('submit', e => {
@@ -1734,8 +1735,9 @@ $('coverUpload').addEventListener('click', () => $('coverFile').click());
 $('coverFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { setCover(await readImage(f, 640, 640, false)); }
-  catch(err){ toast("That picture couldn't be loaded"); }
+  toast('Uploading…');
+  try { setCover(await storeImage(f, { maxW:800, maxH:800, kind:'cover' })); }
+  catch(err){ toast(err.message || "That picture couldn't be loaded"); }
 });
 $('coverRemove').addEventListener('click', () => setCover(''));
 $('coverUrlForm').addEventListener('submit', e => {
@@ -1875,7 +1877,7 @@ const BADGES = [
   ['clipper','▶','Highlight reel','Shared 5+ clips',       s => s.clips >= 5],
   ['social','☺','Social butterfly','5+ friends',           (s, m) => !!m.counts && m.counts.friends >= 5],
   ['steamv','✔','Steam verified','Linked a real Steam account', (s, m) => !!(m.steam && m.steam.linked)],
-  ['steam100','🏆','Perfect game','100% achievements in a Steam game', (s, m) => !!(m.steam && m.steam.ach && Object.values(m.steam.ach).some(a => a.total > 0 && a.done === a.total))]
+  ['steam100','🏆','Perfect game','100% achievements in a Steam game', (s, m) => !!(m.steam && ((m.steam.stats && m.steam.stats.perfect > 0) || (m.steam.ach && Object.values(m.steam.ach).some(a => a.total > 0 && a.done === a.total))))]
 ];
 
 /* ---------- Building the public snapshot ---------- */
@@ -2068,8 +2070,13 @@ function sectionHTML(key, s, m){
   }
   if (key === 'stats'){
     const st = s.stats;
+    const sv = m.steam && m.steam.linked && !m.steam.private ? m.steam : null;
+    // With Steam connected, show achievements from Steam instead of checklist items
+    const fifth = sv
+      ? ['Achievements <span class="verified" title="Counted from all your Steam games">✓</span>', sv.stats ? sv.stats.unlocked.toLocaleString() : '…']
+      : ['Checklist items', st.items];
     const items = [['Games', st.games], ['Completed', st.completed], ['Completion rate', st.rate == null ? '—' : st.rate + '%'],
-                   ['Hours played', st.hours], ['Checklist items', st.items], ['PvP games', st.pvp]];
+                   ['Hours played', st.hours], fifth, ['PvP games', st.pvp]];
     return `<div class="stats p-stats">${items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
   }
   if (key === 'playing')   return s.playing.length ? `<div class="minis">${s.playing.map(x => miniCardHTML(x, m.isMe)).join('')}</div>` : '';
@@ -2411,6 +2418,7 @@ async function loadMyRow(){
     saveProfile();
     openSteamSync();
   } else if (myLinks.steam) autoSteamSync();
+  moveOldPicturesToStorage();
   if (!myRow && !sessionStorageGet('checkpoint-skip-username')) openUsernameDlg();
 }
 function sessionStorageGet(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
@@ -2663,7 +2671,15 @@ $('pSections').addEventListener('change', e => {
 });
 
 // Shrink uploaded pictures so they fit in storage
-function readImage(file, maxW, maxH, square){
+/* ---------- Pictures (profile picture, banner, game covers) ----------
+   Signed in: pictures go to your picture storage, so everyone who visits
+   your profile sees them. GIFs stay animated. Not signed in: they're kept
+   in this browser only. */
+const GIF_MAX = 8 * 1024 * 1024, LOCAL_GIF_MAX = 2 * 1024 * 1024;
+const canUpload = () => accountsOn() && !!sb && !!user;
+
+// Make a still picture smaller (keeps see-through parts)
+function shrinkImage(file, { maxW, maxH, square }){
   return new Promise((resolve, reject) => {
     const img = new Image();
     const src = URL.createObjectURL(file);
@@ -2675,12 +2691,60 @@ function readImage(file, maxW, maxH, square){
       c.width = Math.round(sw * scale); c.height = Math.round(sh * scale);
       c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
       URL.revokeObjectURL(src);
-      resolve(c.toDataURL('image/jpeg', 0.85));
+      c.toBlob(b => b ? resolve(b) : c.toBlob(j => j ? resolve(j) : reject(new Error('bad image')), 'image/jpeg', 0.85), 'image/webp', 0.85);
     };
-    img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('bad image')); };
+    img.onerror = () => { URL.revokeObjectURL(src); reject(new Error("That picture couldn't be loaded")); };
     img.src = src;
   });
 }
+const blobToDataURL = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+
+async function uploadMedia(blob, kind){
+  const type = blob.type || 'image/jpeg';
+  const ext = { 'image/gif':'gif', 'image/png':'png', 'image/webp':'webp' }[type] || 'jpg';
+  const path = `${user.id}/${kind}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  const { error } = await sb.storage.from('media').upload(path, blob, { contentType:type, cacheControl:'31536000', upsert:false });
+  if (error) throw error;
+  return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
+}
+
+let warnedNoStorage = false;
+async function storeImage(file, opts){
+  const isGif = file.type === 'image/gif';
+  if (isGif && file.size > GIF_MAX) throw new Error('GIFs can be up to 8 MB');
+  const blob = isGif ? file : await shrinkImage(file, opts);
+  if (canUpload()){
+    try { return await uploadMedia(blob, opts.kind); }
+    catch(err){
+      console.warn('upload', err);
+      if (!warnedNoStorage){ warnedNoStorage = true; toast("Picture storage isn't set up yet, so this picture only shows on this device"); }
+    }
+  }
+  if (isGif && file.size > LOCAL_GIF_MAX) throw new Error('Sign in to use GIFs bigger than 2 MB');
+  return blobToDataURL(blob);
+}
+
+// Older pictures saved inside the browser get moved to storage, so visitors can see them
+let migratingPictures = false;
+async function moveOldPicturesToStorage(){
+  if (!canUpload() || migratingPictures) return;
+  migratingPictures = true;
+  const toBlob = d => fetch(d).then(r => r.blob());
+  try {
+    let changedProfile = false, changedGames = false;
+    for (const [field, kind] of [['avatar','avatar'], ['banner','banner']]){
+      if (String(profile[field]).startsWith('data:')){ profile[field] = await uploadMedia(await toBlob(profile[field]), kind); changedProfile = true; }
+    }
+    for (const g of games){
+      if (String(g.cover).startsWith('data:')){ g.cover = await uploadMedia(await toBlob(g.cover), 'cover'); changedGames = true; }
+    }
+    if (changedProfile) saveProfile();
+    if (changedGames) saveGames();
+    if (changedProfile || changedGames) render();
+  } catch(err){ console.warn('moving pictures', err); }
+  migratingPictures = false;
+}
+
 $('pAvatarBtn').addEventListener('click', () => $('pAvatarFile').click());
 $('pBannerBtn').addEventListener('click', () => $('pBannerFile').click());
 $('pAvatarDel').addEventListener('click', () => { draft.avatar = ''; renderImgPreviews(); previewDraft(); });
@@ -2692,17 +2756,19 @@ $('pBannerDel').addEventListener('click', () => {
 $('pAvatarFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { draft.avatar = await readImage(f, 320, 320, true); renderImgPreviews(); previewDraft(); }
-  catch(err){ toast("That picture couldn't be loaded"); }
+  toast(f.type === 'image/gif' ? 'Uploading your GIF…' : 'Uploading…');
+  try { draft.avatar = await storeImage(f, { maxW:400, maxH:400, square:true, kind:'avatar' }); renderImgPreviews(); previewDraft(); toast('Picture ready ♡ Click Save profile'); }
+  catch(err){ toast(err.message || "That picture couldn't be loaded"); }
 });
 $('pBannerFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   try {
-    draft.banner = await readImage(f, 1500, 500, false);
+    toast(f.type === 'image/gif' ? 'Uploading your GIF…' : 'Uploading…');
+    draft.banner = await storeImage(f, { maxW:1500, maxH:600, kind:'banner' });
     draft.bannerStyle = 'image'; $('pBannerStyle').value = 'image';
     renderImgPreviews(); previewDraft();
-  } catch(err){ toast("That picture couldn't be loaded"); }
+  } catch(err){ toast(err.message || "That picture couldn't be loaded"); }
 });
 
 $('profileForm').addEventListener('submit', async e => {
@@ -2800,6 +2866,20 @@ async function unlinkSteam(){
   toast('Steam unlinked');
 }
 
+function readAchStats(x){
+  if (!x || x.unlocked == null) return null;
+  return { unlocked:Math.max(0, Number(x.unlocked) || 0), total:Math.max(0, Number(x.total) || 0), perfect:Math.max(0, Number(x.perfect) || 0), at:String(x.at || '') };
+}
+// Recount all achievements (the helper only really recounts once an hour)
+async function refreshAchTotal(id){
+  try {
+    const r = await fetch(`${STEAM_FN}?action=achtotal&user=${encodeURIComponent(id)}`, { headers:{ apikey:SUPABASE_KEY } });
+    const st = readAchStats(await r.json());
+    const c = steamCache[id];
+    if (st && c && c.data){ c.data.stats = st; if (currentMeta && currentMeta.id === id) render(); }
+  } catch(err){ console.warn('achievement total', err); }
+}
+
 // Someone's games + hours, straight from Steam (cached for 5 minutes)
 async function fetchSteamFor(id){
   steamCache[id] = { ...(steamCache[id] || {}), loading:true, at:Date.now() };
@@ -2811,6 +2891,7 @@ async function fetchSteamFor(id){
       data = {
         linked:j.linked, steamid:/^\d{17}$/.test(j.steamid || '') ? j.steamid : '', name:String(j.name || ''),
         private:!!j.private, count:Number(j.count) || 0,
+        stats: readAchStats(j.stats),
         games:(Array.isArray(j.games) ? j.games : []).filter(g => g && Number.isInteger(g.appid))
           .map(g => ({ appid:g.appid, name:String(g.name || ''), hours:Math.max(0, Number(g.hours) || 0), recent:Math.max(0, Number(g.recent) || 0) }))
       };
@@ -2824,6 +2905,8 @@ async function fetchSteamFor(id){
   } catch(err){ console.warn('steam games', err); }
   steamCache[id] = { loading:false, at:Date.now(), data };
   if (currentMeta && currentMeta.id === id && (view === 'profile' || view === 'user')) render();
+  // Count all achievements if it's never been done, or it's been over an hour
+  if (data && data.linked && !data.private && (!data.stats || Date.now() - Date.parse(data.stats.at || 0) > 3600000)) refreshAchTotal(id);
   return data;
 }
 
