@@ -21,26 +21,26 @@
 
 </div>
 
-## about (｡•ᴗ•｡)
+## About (｡•ᴗ•｡)
 
 Checkpoint is a game tracker for everything you play: your backlog, the games you want to fully complete, and the competitive games that never really end.
 
 Most trackers expect every game to have an ending. Checkpoint gives PvP games their own section with ranks, mains and clips instead.
 
-## features (˶>⩊<˶)
+## Features ✧(◕‿◕)✧
 
-♡ Game search that fills in banners and info<br>
+♡ Game search that fills in pictures and info (no setup needed)<br>
 ♡ Completion checklists for bosses, collectibles and achievements<br>
 ♡ PvP section with current rank, peak rank and your main<br>
 ♡ Clips from YouTube, Twitch or Streamable<br>
 ♡ Public profile with a unique username and your own link<br>
-♡ Profile themes everyone sees, or match colours to your picture<br>
-♡ Cute picture frames, badges, and clickable gamer tags<br>
+♡ Profile themes everyone sees, or match colors to your picture<br>
+♡ Badges, plus gamer tags that open your U.GG, Tracklock and Steam pages<br>
 ♡ Live status: shows the game you're playing on Steam or Discord<br>
 ♡ Follow people, see friends and followers (you choose what's shown)<br>
 ♡ Optional account so your games save everywhere
 
-## two ways to use it (˶ᵔ ᵕ ᵔ˶)
+## Two ways to use it (˶ᵔ ᵕ ᵔ˶)
 
 <table>
 <tr>
@@ -68,7 +68,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 > [!NOTE]
 > Already have games in your browser? Signing in keeps them. If your account has games too, Checkpoint asks which ones to keep.
 
-## how to use (っ◔◡◔)っ
+## How to use (っ◔◡◔)っ
 
 ✧ Open the [live site](https://aegyoer.github.io/checkpoint/)<br>
 ✧ Click **+ Add game** and type a title<br>
@@ -97,7 +97,7 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 - [ ] Riot and Battle.net stats
 - [ ] Community checklists
 
-## found a bug or have an idea? ( ˘▽˘)っ♡
+## Found a bug or have an idea? ( ˘▽˘)っ♡
 
 <a href="https://github.com/aegyoer/checkpoint/issues/new?template=bug_report.yml"><img src="https://img.shields.io/badge/%E2%9C%BF%20report%20a%20bug-ff9ec7?style=for-the-badge" alt="Report a bug"></a>
 <a href="https://github.com/aegyoer/checkpoint/issues/new?template=feature_request.yml"><img src="https://img.shields.io/badge/%E2%9C%A7%20request%20a%20feature-f7b6d2?style=for-the-badge" alt="Request a feature"></a>
@@ -108,7 +108,7 @@ Both open a short form. Screenshots are welcome!
 
 <img src="assets/divider.svg" alt="" width="60%">
 
-<p>Game info from <a href="https://rawg.io">RAWG</a> · Accounts by <a href="https://supabase.com">Supabase</a> · GIF belongs to its original artist · <a href="LICENSE">MIT License</a></p>
+<p>Game info from <a href="https://www.wikipedia.org">Wikipedia</a> · Accounts by <a href="https://supabase.com">Supabase</a> · GIF belongs to its original artist · <a href="LICENSE">MIT License</a></p>
 
 <p>made with ♡ by <a href="https://github.com/aegyoer">aegyoer</a></p>
 

@@ -268,7 +268,7 @@ dialog > form{display:contents}
 .tag small{color:var(--muted);font-size:.72rem}
 .tag .go{color:var(--accent);font-size:.75rem}
 
-/* Profile picture + frames */
+/* Profile picture */
 .av-wrap{position:relative;width:120px;height:120px;flex-shrink:0}
 .p-avatar{position:relative;z-index:1;width:100%;height:100%;border:5px solid var(--panel);background:var(--panel-2);display:grid;place-items:center;overflow:hidden;border-radius:50%}
 .p-avatar.shape-rounded{border-radius:calc(var(--radius) + 10px)}
@@ -276,24 +276,6 @@ dialog > form{display:contents}
 .p-avatar.shape-hex{border-radius:0;border:none;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%)}
 .p-avatar img{width:100%;height:100%;object-fit:cover}
 .p-avatar span{font-family:var(--font-head);font-size:2.4rem;font-weight:700;color:var(--accent)}
-.frame-glow .p-avatar{box-shadow:0 0 0 3px var(--accent),0 0 28px color-mix(in srgb, var(--accent) 75%, transparent)}
-.frame-ring .p-avatar{border:6px solid transparent;background:linear-gradient(var(--panel-2),var(--panel-2)) padding-box,conic-gradient(#ff8fb8,#ffd36e,#7fd8d2,#b48ad8,#ff8fb8) border-box}
-.frame-pixel .p-avatar{border-radius:0;border:none;clip-path:none;box-shadow:0 -6px 0 var(--accent),0 6px 0 var(--accent),-6px 0 0 var(--accent),6px 0 0 var(--accent),0 0 0 3px var(--panel) inset}
-.deco{position:absolute;z-index:2;pointer-events:none;color:var(--accent);line-height:1;font-size:22px;animation:floaty 2.4s ease-in-out infinite;text-shadow:0 1px 4px rgba(0,0,0,.25)}
-.deco.d1{top:-8px;left:-6px}
-.deco.d2{top:8px;right:-12px;font-size:16px;animation-delay:.5s}
-.deco.d3{bottom:10px;left:-12px;font-size:14px;animation-delay:1s}
-.deco.d4{bottom:-6px;right:2px;font-size:18px;animation-delay:1.5s}
-.frame-sparkles .deco{animation:twinkle 1.8s ease-in-out infinite}
-@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes twinkle{0%,100%{opacity:.35;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(20deg)}}
-.bow{position:absolute;z-index:2;top:-16px;right:-16px;width:62px;transform:rotate(16deg);pointer-events:none}
-.ear{position:absolute;z-index:0;top:-18px;width:0;height:0;border-left:24px solid transparent;border-right:24px solid transparent;border-bottom:40px solid var(--accent)}
-.ear.l{left:2px;transform:rotate(-20deg)}
-.ear.r{right:2px;transform:rotate(20deg)}
-.bow path,.bow circle{fill:var(--accent)}
-.bow .shine{fill:none;stroke:rgba(255,255,255,.65);stroke-width:2.5;stroke-linecap:round}
-.ear::after{content:"";position:absolute;left:-12px;top:12px;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:22px solid color-mix(in srgb, var(--accent) 45%, #fff)}
 
 /* Live status */
 .live{display:flex;flex-wrap:wrap;gap:8px;padding:12px 24px 0}
@@ -562,7 +544,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   <span id="footStorage">Your data is saved in this browser</span> ·
   <a id="bugLink" target="_blank" rel="noopener">Report a bug</a> ·
   <a id="featureLink" target="_blank" rel="noopener">Request a feature</a> ·
-  Game info &amp; images from <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>
+  Game info from <a href="https://en.wikipedia.org" target="_blank" rel="noopener">Wikipedia</a> &amp; <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -800,15 +782,11 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
             </select>
           </div>
           <div>
-            <label for="pFrame">Picture frame</label>
-            <select id="pFrame"></select>
-          </div>
-        </div>
-        <div class="row">
-          <div>
             <label for="pAvatarPos">Picture position</label>
             <select id="pAvatarPos"><option value="left">Left</option><option value="center">Center</option></select>
           </div>
+        </div>
+        <div>
           <div>
             <label for="pBannerStyle">Banner</label>
             <select id="pBannerStyle">
@@ -852,7 +830,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
 
       <div class="ed-group">
         <h3>Gamer tags</h3>
-        <p class="hint">Steam, Xbox, PlayStation, Riot and Discord tags become links to your profile on that site. Others can be copied with one click. You can also paste a full profile link.</p>
+        <p class="hint">League and Valorant open your U.GG page, Deadlock opens your Tracklock (U.GG) stats, and Steam, Xbox, PlayStation and Discord open your profile there. Others copy with one click. You can also paste a full profile link.</p>
         <div class="tag-grid" id="pTags"></div>
         <div>
           <label for="pDiscordId">Discord user ID <span class="hint">(optional, for live status)</span></label>
@@ -941,9 +919,9 @@ const GITHUB_REPO = 'aegyoer/checkpoint';
 const STORY_STATUS = { backlog:'Backlog', playing:'Playing', completed:'Completed', dropped:'Dropped', wishlist:'Wishlist' };
 const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', retired:'Retired' };
 const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
-const GAMER_TAGS = [['steam','Steam'],['riot','Riot ID'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
+const GAMER_TAGS = [['steam','Steam'],['league','League of Legends'],['valorant','Valorant'],['deadlock','Deadlock'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
+const LEAGUE_REGIONS = [['na1','NA'],['euw1','EUW'],['eun1','EUNE'],['kr','KR'],['br1','BR'],['la1','LAN'],['la2','LAS'],['oc1','OCE'],['tr1','TR'],['ru','RU'],['jp1','JP'],['me1','ME'],['ph2','PH'],['sg2','SG'],['th2','TH'],['tw2','TW'],['vn2','VN']];
 const SECTION_LABELS = { badges:'Badges', stats:'Stats', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', friends:'Friends' };
-const FRAMES = { none:'None', glow:'Glow', ring:'Rainbow ring', hearts:'Floating hearts', sparkles:'Sparkles', bow:'Ribbon bow', catears:'Cat ears', pixel:'Pixel' };
 // Usernames that get the "Creator" badge
 const CREATORS = ['aegyoer'];
 // Game-database tags that mean "this is probably a PvP game"
@@ -981,7 +959,7 @@ delete DEFAULT_THEME.name;
 const DEFAULT_PROFILE = {
   name:'Player One', handle:'', status:'', bio:'',
   avatar:'', banner:'', bannerStyle:'gradient', avatarShape:'circle',
-  avatarPos:'left', frame:'none', discordId:'',
+  avatarPos:'left', discordId:'', leagueRegion:'na1',
   tags:{}, favorites:[],
   pTheme:{ mode:'app', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#ff8fb8', headFont:'grotesk', bodyFont:'inter', bgEffect:'glow' },
   privacy:{ live:true, followers:true, friends:true, joined:true },
@@ -1088,7 +1066,10 @@ function normalizeProfile(p){
   if (!['gradient','solid','image','none'].includes(out.bannerStyle)) out.bannerStyle = 'gradient';
   if (!['circle','rounded','square','hex'].includes(out.avatarShape)) out.avatarShape = 'circle';
   if (!['left','center'].includes(out.avatarPos)) out.avatarPos = 'left';
-  if (!FRAMES[out.frame]) out.frame = 'none';
+  delete out.frame;
+  if (!LEAGUE_REGIONS.some(r => r[0] === out.leagueRegion)) out.leagueRegion = 'na1';
+  // Older saves had one "Riot ID" box: use it for League and Valorant
+  if (out.tags.riot){ out.tags.league = out.tags.league || out.tags.riot; out.tags.valorant = out.tags.valorant || out.tags.riot; delete out.tags.riot; }
   out.discordId = /^\d{15,22}$/.test(String(p.discordId || '')) ? String(p.discordId) : '';
   out.pTheme = normalizePTheme(p.pTheme);
   const pv = (p.privacy && typeof p.privacy === 'object') ? p.privacy : {};
@@ -1304,8 +1285,7 @@ function setFormType(t){
 document.querySelectorAll('input[name=fType]').forEach(r => r.addEventListener('change', () => setFormType(r.value)));
 
 function defaultHint(){
-  return RAWG_KEY ? 'Start typing to search the game database. Pick a result to grab its banner and info.'
-                  : 'Game search is off. Add a free RAWG key at the top of the script to auto-fill banners and info.';
+  return 'Start typing to search for the game. Pick it from the list to fill in its picture and info automatically.';
 }
 
 function openForm(id = null, type = 'story'){
@@ -1371,9 +1351,20 @@ $('gameForm').addEventListener('submit', e => {
   if (detailDlg.open) renderDetail();
 });
 
-/* ---------- Game database search (RAWG) ---------- */
+/* ---------- Game search ----------
+   Works with no setup: it searches Wikipedia's video game articles.
+   If you add a RAWG key (top of the script), it uses RAWG instead,
+   which has bigger banners and more info. */
 const sugBox = $('fSuggest');
 let sugResults = [], sugIndex = -1, sugTimer = null, sugAbort = null;
+
+// Games that are always PvP, even if the description doesn't say so
+const KNOWN_PVP = ['counter-strike','valorant','league of legends','dota','overwatch','rocket league','apex legends','fortnite',
+  'rainbow six','deadlock','marvel rivals','pubg','playerunknown','warzone','smite','teamfight tactics','hearthstone','street fighter',
+  'tekken','super smash','the finals','splitgate','brawl stars','clash royale','mobile legends','arena of valor','wild rift',
+  'heroes of the storm','paladins','halo infinite','call of duty','team fortress','xdefiant','spectre divide','2xko','the bazaar'];
+const PVP_WORDS = /multiplayer online battle arena|\bMOBA\b|battle royale|tactical (first-person )?shooter|hero shooter|competitive|esports|fighting game|online multiplayer|collectible card|auto battler|arena shooter/i;
+const looksPvp = (title, text) => KNOWN_PVP.some(k => title.toLowerCase().includes(k)) || PVP_WORDS.test(text || '');
 
 function hideSug(){ sugBox.hidden = true; sugBox.innerHTML = ''; sugIndex = -1; }
 function sugMsg(text){ sugBox.innerHTML = `<div class="sug-msg">${esc(text)}</div>`; sugBox.hidden = false; }
@@ -1381,46 +1372,80 @@ function sugMsg(text){ sugBox.innerHTML = `<div class="sug-msg">${esc(text)}</di
 $('fTitle').addEventListener('input', () => {
   const q = $('fTitle').value.trim();
   clearTimeout(sugTimer);
-  if (!RAWG_KEY || q.length < 2){ hideSug(); return; }
+  if (q.length < 2){ hideSug(); return; }
   sugTimer = setTimeout(() => searchGames(q), 350);  // wait until you stop typing
 });
+
+// Every source is turned into the same shape: { name, image, year, info, genres, pvp, rawgId }
+async function searchRawg(q, signal){
+  const url = `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_KEY)}&search=${encodeURIComponent(q)}&search_precise=true&page_size=6`;
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return (data.results || []).map(r => {
+    const tags = (r.tags || []).map(t => t.slug);
+    return {
+      name: String(r.name || ''), image: safeUrl(r.background_image), rawgId: r.id || null,
+      year: r.released ? String(r.released).slice(0, 4) : '',
+      info: (r.parent_platforms || []).map(p => p.platform.name).join(', '),
+      genres: (r.genres || []).map(x => x.name).slice(0, 3),
+      pvp: PVP_TAGS.some(t => tags.includes(t)) || looksPvp(String(r.name || ''), '')
+    };
+  });
+}
+
+async function searchWikipedia(q, signal){
+  const params = new URLSearchParams({
+    action:'query', format:'json', origin:'*', redirects:'1',
+    generator:'search', gsrsearch:q + ' video game', gsrnamespace:'0', gsrlimit:'15',
+    prop:'pageimages|description', piprop:'thumbnail', pithumbsize:'640', pilicense:'any'
+  });
+  const res = await fetch('https://en.wikipedia.org/w/api.php?' + params, { signal });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  const pages = Object.values((data.query && data.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+  return pages
+    .filter(p => /video game/i.test(p.description || '') &&
+                 !/\bseries\b|franchise|\bcharacter|soundtrack|\bcompany|developer|publisher|\bplayers?\b|esports team|tournament|game engine|console|\bfilm\b|novel|expansion pack/i.test(p.description || ''))
+    .slice(0, 6)
+    .map(p => {
+      const d = String(p.description || '');
+      const name = String(p.title).replace(/ \((\d{4} )?video game\)$/i, '');
+      let genre = d.replace(/\b(19|20)\d\d\b/, '').replace(/video game/i, '').replace(/^\s*(upcoming|an?|the)\s+/i, '').replace(/\s+/g, ' ').trim();
+      return {
+        name, image: safeUrl(p.thumbnail && p.thumbnail.source), rawgId: null,
+        year: (d.match(/\b(19[7-9]\d|20\d\d)\b/) || [])[1] || (/upcoming/i.test(d) ? 'Upcoming' : ''),
+        info: genre ? genre[0].toUpperCase() + genre.slice(1) : 'Video game',
+        genres: genre ? [genre[0].toUpperCase() + genre.slice(1)].slice(0, 1) : [],
+        pvp: looksPvp(name, d)
+      };
+    });
+}
 
 async function searchGames(q){
   if (sugAbort) sugAbort.abort();
   sugAbort = new AbortController();
   sugMsg('Searching…');
   try {
-    const url = `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_KEY)}&search=${encodeURIComponent(q)}&search_precise=true&page_size=6`;
-    const res = await fetch(url, { signal: sugAbort.signal });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    sugResults = data.results || [];
+    sugResults = RAWG_KEY ? await searchRawg(q, sugAbort.signal) : await searchWikipedia(q, sugAbort.signal);
     sugIndex = -1;
     if (!sugResults.length) return sugMsg('No matches. You can still add it by name.');
-    sugBox.innerHTML = sugResults.map((r, i) => {
-      const img = safeUrl(r.background_image);
-      const info = [r.released ? r.released.slice(0, 4) : '', (r.parent_platforms || []).map(p => p.platform.name).join(', ')].filter(Boolean).join(' · ');
-      return `<button type="button" class="sug" data-i="${i}">
-        ${img ? `<img src="${esc(sized(img, 200))}" data-full="${esc(img)}" alt="">` : '<span class="sug-ph"></span>'}
-        <div><b>${esc(r.name)}</b><small>${esc(info)}</small></div>
-      </button>`;
-    }).join('');
+    sugBox.innerHTML = sugResults.map((r, i) => `<button type="button" class="sug" data-i="${i}">
+        ${r.image ? `<img src="${esc(sized(r.image, 200))}" data-full="${esc(r.image)}" alt="">` : '<span class="sug-ph"></span>'}
+        <div><b>${esc(r.name)}</b><small>${esc([r.year, r.info].filter(Boolean).join(' · '))}</small></div>
+      </button>`).join('');
     sugBox.hidden = false;
   } catch(err){
     if (err.name === 'AbortError') return;
-    sugMsg("Couldn't reach the game database. Check your RAWG key.");
+    sugMsg("Couldn't search right now. You can still add it by name.");
   }
 }
 
 function pickResult(r){
-  const tags = (r.tags || []).map(t => t.slug);
-  picked = {
-    name: r.name, cover: safeUrl(r.background_image), rawgId: r.id,
-    genres: (r.genres || []).map(x => x.name).slice(0, 3), released: r.released || ''
-  };
+  picked = { name:r.name, cover:r.image, rawgId:r.rawgId, genres:r.genres, released:r.year === 'Upcoming' ? '' : r.year };
   $('fTitle').value = r.name;
   hideSug(); renderPicked();
-  if (!editingId && formType !== 'pvp' && PVP_TAGS.some(t => tags.includes(t))){
+  if (!editingId && formType !== 'pvp' && r.pvp){
     setFormType('pvp');
     $('fHint').textContent = "Looks like a competitive game, so it's set to PvP. Switch back if you want.";
   }
@@ -1680,7 +1705,7 @@ function buildSnapshot(p = profile){
   return {
     v:1, name:p.name, handle:p.handle, status:p.status, bio:p.bio,
     avatar:p.avatar, banner: p.bannerStyle === 'image' ? p.banner : '',
-    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, frame:p.frame,
+    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion,
     tags:p.tags, discordId:p.discordId, privacy:p.privacy, sections:p.sections, theme:profileTheme(p),
     stats:{
       games:games.length, completed, rate: finishable ? Math.round(completed / finishable * 100) : null,
@@ -1723,15 +1748,30 @@ function steamIdFrom(v){
   const m = String(v || '').match(/steamcommunity\.com\/(?:id|profiles)\/([^/?#]+)/i);
   return (m ? m[1] : String(v || '')).trim();
 }
-function tagLink(key, value, discordId){
+// Deadlock stats (Tracklock, part of U.GG) use your numeric Steam account ID
+function deadlockId(v){
+  v = String(v || '').trim();
+  const t = v.match(/tracklock\.gg\/players\/(\d+)/i); if (t) return t[1];
+  const m = v.match(/steamcommunity\.com\/profiles\/(\d{17})/i); if (m) v = m[1];
+  if (/^\d{17}$/.test(v)) return (BigInt(v) - 76561197960265728n).toString();
+  if (/^\d{1,10}$/.test(v)) return v;
+  return '';
+}
+function riotParts(v){
+  const i = String(v).lastIndexOf('#');
+  return i > 0 ? [String(v).slice(0, i).trim(), String(v).slice(i + 1).trim()] : null;
+}
+function tagLink(key, value, s){
   const v = String(value).trim(), e = encodeURIComponent;
   const url = safeUrl(v);
   if (url) return url;
   if (key === 'steam'){ const id = steamIdFrom(v); return /^\d{17}$/.test(id) ? `https://steamcommunity.com/profiles/${id}` : `https://steamcommunity.com/id/${e(id)}`; }
+  if (key === 'league'){ const r = riotParts(v); return r ? `https://u.gg/lol/profile/${s.leagueRegion || 'na1'}/${e((r[0] + '-' + r[1]).toLowerCase())}/overview` : ''; }
+  if (key === 'valorant'){ const r = riotParts(v); return r ? `https://u.gg/val/profile/${e(r[0])}-${e(r[1])}` : ''; }
+  if (key === 'deadlock'){ const id = deadlockId(v) || deadlockId(s.tags.steam && steamIdFrom(s.tags.steam)); return id ? `https://tracklock.gg/players/${id}` : ''; }
   if (key === 'xbox') return `https://www.xbox.com/play/user/${e(v)}`;
   if (key === 'psn') return `https://psnprofiles.com/${e(v)}`;
-  if (key === 'riot' && v.includes('#')) return `https://tracker.gg/valorant/profile/riot/${e(v)}/overview`;
-  if (key === 'discord' && discordId) return `https://discord.com/users/${discordId}`;
+  if (key === 'discord' && s.discordId) return `https://discord.com/users/${s.discordId}`;
   return '';
 }
 function tagText(key, value){
@@ -1748,17 +1788,7 @@ function profileStyle(t){
 }
 function avatarHTML(s){
   const pic = s.avatar ? `<img src="${esc(s.avatar)}" alt="">` : `<span>${esc(initials(s.name || 'P'))}</span>`;
-  const decos = {
-    hearts:   ['♥','♥','♥','♥'],
-    sparkles: ['✦','✧','✦','✧']
-  }[s.frame];
-  const deco = decos ? decos.map((c, i) => `<b class="deco d${i + 1}">${c}</b>`).join('') : '';
-  const bow = s.frame === 'bow' ? `<svg class="bow" viewBox="0 0 64 40" aria-hidden="true">
-      <path d="M32 20 L5 5 Q-2 20 5 35 Z"/><path d="M32 20 L59 5 Q66 20 59 35 Z"/>
-      <path d="M30 20 L20 40 L27 39 Z M34 20 L44 40 L37 39 Z" opacity=".85"/>
-      <circle cx="32" cy="20" r="6.5"/><path class="shine" d="M10 12 Q8 20 11 27"/></svg>` : '';
-  const ears = s.frame === 'catears' ? '<i class="ear l"></i><i class="ear r"></i>' : '';
-  return `<div class="av-wrap frame-${s.frame}">${ears}<div class="p-avatar shape-${s.avatarShape}">${pic}</div>${deco}${bow}</div>`;
+  return `<div class="av-wrap"><div class="p-avatar shape-${s.avatarShape}">${pic}</div></div>`;
 }
 function miniCardHTML(m, isMe){
   const g = { title:m.title, cover:m.cover };
@@ -1842,8 +1872,8 @@ function profileHTML(s, m){
   }
 
   const tags = GAMER_TAGS.filter(([k]) => s.tags[k]).map(([k, label]) => {
-    const link = tagLink(k, s.tags[k], s.discordId);
-    const text = esc(tagText(k, s.tags[k]));
+    const link = tagLink(k, s.tags[k], s);
+    const text = esc(tagText(k, s.tags[k])) + (k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === s.leagueRegion) || ['', 'NA'])[1])}</small>` : '');
     return link
       ? `<a class="tag" href="${esc(link)}" target="_blank" rel="noopener"><small>${label}</small>${text}<span class="go">↗</span></a>`
       : `<button class="tag" data-copy="${esc(s.tags[k])}" title="Click to copy"><small>${label}</small>${text}</button>`;
@@ -2204,9 +2234,20 @@ function paletteFrom(src){
 const profileDlg = $('profileDlg');
 let draft = null, profileSaved = false;
 
-$('pTags').innerHTML = GAMER_TAGS.map(([k, label]) =>
-  `<div><label for="tag-${k}">${label}${k === 'steam' ? ' <span class="hint">(profile link or name)</span>' : ''}</label><input type="text" id="tag-${k}" data-tag="${k}" maxlength="120"></div>`).join('');
-fillSelect($('pFrame'), Object.entries(FRAMES));
+const TAG_HELP = {
+  steam:['(profile link or name)', 'steamcommunity.com/id/…'],
+  league:['(Riot ID → opens U.GG)', 'Name#TAG'],
+  valorant:['(Riot ID → opens U.GG)', 'Name#TAG'],
+  deadlock:['(Steam ID → opens Tracklock)', '7656119… or Steam profile link'],
+  battlenet:['', 'Name#1234'], switch:['', 'SW-1234-5678-9012']
+};
+$('pTags').innerHTML = GAMER_TAGS.map(([k, label]) => {
+  const [help, ph] = TAG_HELP[k] || ['', ''];
+  const input = `<input type="text" id="tag-${k}" data-tag="${k}" maxlength="120" placeholder="${esc(ph)}">`;
+  return `<div><label for="tag-${k}">${label} ${help ? `<span class="hint">${help}</span>` : ''}</label>${k === 'league'
+    ? `<div style="display:grid;grid-template-columns:1fr 90px;gap:6px">${input}<select id="pLeagueRegion" aria-label="League region">${LEAGUE_REGIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></div>`
+    : input}</div>`;
+}).join('');
 fillSelect($('ptHead'), Object.entries(FONTS).map(([k, f]) => [k, f[0]]));
 fillSelect($('ptBody'), BODY_FONTS.map(k => [k, FONTS[k][0]]));
 watchNameInput($('pUsername'), $('pUserState'));
@@ -2223,7 +2264,7 @@ function openProfileEditor(){
   $('pName').value = draft.name; $('pHandle').value = draft.handle;
   $('pStatus').value = draft.status; $('pBio').value = draft.bio;
   $('pShape').value = draft.avatarShape; $('pBannerStyle').value = draft.bannerStyle;
-  $('pFrame').value = draft.frame; $('pAvatarPos').value = draft.avatarPos;
+  $('pAvatarPos').value = draft.avatarPos; $('pLeagueRegion').value = draft.leagueRegion;
   $('pDiscordId').value = draft.discordId;
   document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
   $('pvLive').checked = draft.privacy.live; $('pvFollowers').checked = draft.privacy.followers;
@@ -2246,7 +2287,7 @@ function readProfileForm(){
   draft.status = $('pStatus').value.trim();
   draft.bio = $('pBio').value.trim();
   draft.avatarShape = $('pShape').value; draft.bannerStyle = $('pBannerStyle').value;
-  draft.frame = $('pFrame').value; draft.avatarPos = $('pAvatarPos').value;
+  draft.avatarPos = $('pAvatarPos').value; draft.leagueRegion = $('pLeagueRegion').value;
   draft.discordId = $('pDiscordId').value.trim();
   draft.tags = {};
   document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
