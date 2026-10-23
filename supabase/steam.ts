@@ -7,6 +7,7 @@
 //   ?action=resolve   turn a custom Steam name into a Steam ID number
 //   ?action=achievements  one game's achievements (names, icons, unlocked or not)
 //   ?action=achsummary    unlocked / total achievements for up to 25 games at once
+//   ?action=achtotal      ALL achievements across someone's played games (saved, refreshed hourly)
 //
 // Setup: Supabase → Edge Functions → Deploy a new function → Via Editor,
 // name it exactly  steam , paste this whole file, Deploy.
@@ -84,8 +85,8 @@ async function linkedSteamId(user: string): Promise<string | null> {
 }
 
 // A player's achievements for one game (null if the game has none, or the profile is private)
-async function playerAchievements(steamid: string, appid: number) {
-  const r = await fetch(`https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${STEAM_KEY}&steamid=${steamid}&appid=${appid}&l=english`);
+async function playerAchievements(steamid: string, appid: number, withNames = true) {
+  const r = await fetch(`https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${STEAM_KEY}&steamid=${steamid}&appid=${appid}${withNames ? "&l=english" : ""}`);
   const d = await r.json().catch(() => null);
   const ps = d?.playerstats;
   if (!ps?.success || !Array.isArray(ps.achievements)) return null;
@@ -126,14 +127,17 @@ Deno.serve(async (req) => {
     if (action === "games") {
       const user = q.get("user") ?? "";
       if (!/^[0-9a-f-]{36}$/i.test(user)) return json({ error: "bad user" }, 400);
-      const { data: link } = await admin.from("linked_accounts").select("account_id, display_name, avatar")
+      const { data: link } = await admin.from("linked_accounts").select("account_id, display_name, avatar, ach_unlocked, ach_total, perfect, stats_at")
         .eq("user_id", user).eq("provider", "steam").maybeSingle();
       if (!link) return json({ linked: false }, 200, 60);
       const d = await steamApi("IPlayerService/GetOwnedGames/v1", {
         steamid: link.account_id, include_appinfo: "1", include_played_free_games: "1",
       });
       const list = d?.response?.games;
-      const base = { linked: true, steamid: link.account_id, name: link.display_name, avatar: link.avatar };
+      const base = {
+        linked: true, steamid: link.account_id, name: link.display_name, avatar: link.avatar,
+        stats: { unlocked: link.ach_unlocked, total: link.ach_total, perfect: link.perfect, at: link.stats_at },
+      };
       if (!Array.isArray(list)) return json({ ...base, private: true, games: [] }, 200, 120);
       const games = list.map((g: any) => ({
         appid: g.appid, name: g.name,
@@ -165,6 +169,35 @@ Deno.serve(async (req) => {
       }).sort((x, y) => Number(y.done) - Number(x.done) || y.at - x.at);
       const done = list.filter((a) => a.done).length;
       return json({ linked: true, appid, total: list.length, done, list }, 200, 300);
+    }
+
+    // Every achievement across all played games (saved; recounted at most once an hour)
+    if (action === "achtotal") {
+      const user = q.get("user") ?? "";
+      if (!/^[0-9a-f-]{36}$/i.test(user)) return json({ error: "bad user" }, 400);
+      const { data: link } = await admin.from("linked_accounts").select("account_id, ach_unlocked, ach_total, perfect, stats_at")
+        .eq("user_id", user).eq("provider", "steam").maybeSingle();
+      if (!link) return json({ linked: false });
+      const saved = { linked: true, unlocked: link.ach_unlocked, total: link.ach_total, perfect: link.perfect, at: link.stats_at };
+      if (link.stats_at && Date.now() - Date.parse(link.stats_at) < 60 * 60 * 1000) return json({ ...saved, cached: true });
+      const d = await steamApi("IPlayerService/GetOwnedGames/v1", { steamid: link.account_id, include_played_free_games: "1" });
+      if (!Array.isArray(d?.response?.games)) return json({ ...saved, private: true });
+      const played = d.response.games.filter((g: any) => (g.playtime_forever ?? 0) > 0)
+        .sort((a: any, b: any) => b.playtime_forever - a.playtime_forever).slice(0, 400);
+      let unlocked = 0, total = 0, perfect = 0;
+      for (let i = 0; i < played.length; i += 15) {        // 15 games at a time, so Steam isn't flooded
+        const batch = await Promise.all(played.slice(i, i + 15).map((g: any) => playerAchievements(link.account_id, g.appid, false).catch(() => null)));
+        for (const a of batch) {
+          if (!a || !a.length) continue;
+          const done = a.filter((x) => x.achieved === 1).length;
+          unlocked += done; total += a.length;
+          if (done === a.length) perfect++;
+        }
+      }
+      const at = new Date().toISOString();
+      await admin.from("linked_accounts").update({ ach_unlocked: unlocked, ach_total: total, perfect, stats_at: at })
+        .eq("user_id", user).eq("provider", "steam");
+      return json({ linked: true, unlocked, total, perfect, at });
     }
 
     // Unlocked / total for many games at once
