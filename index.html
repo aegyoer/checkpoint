@@ -267,6 +267,8 @@ dialog > form{display:contents}
 .tag:hover{border-color:var(--accent)}
 .tag small{color:var(--muted);font-size:.72rem}
 .tag .go{color:var(--accent);font-size:.75rem}
+.tag-logo{display:inline-flex;align-items:center;align-self:center;color:var(--accent)}
+.tag-logo svg{width:16px;height:16px;fill:currentColor;display:block}
 
 /* Profile picture */
 .av-wrap{position:relative;width:120px;height:120px;flex-shrink:0}
@@ -831,6 +833,19 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
       <div class="ed-group">
         <h3>Gamer tags</h3>
         <p class="hint">League and Valorant open your U.GG page, Deadlock opens your Tracklock (U.GG) stats, and Steam, Xbox, PlayStation and Discord open your profile there. Others copy with one click. You can also paste a full profile link.</p>
+        <div class="row">
+          <div>
+            <label for="pTagStyle">Show tags as</label>
+            <select id="pTagStyle">
+              <option value="full">Full names (League of Legends)</option>
+              <option value="short">Short names (LoL, VAL)</option>
+              <option value="logo">Logos</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:8px">
+            <label class="check"><input type="checkbox" id="pHideNums"> Hide the #tag part (show <b>&nbsp;name&nbsp;</b> not <b>&nbsp;name#tag</b>)</label>
+          </div>
+        </div>
         <div class="tag-grid" id="pTags"></div>
         <div>
           <label for="pDiscordId">Discord user ID <span class="hint">(optional, for live status)</span></label>
@@ -959,7 +974,7 @@ delete DEFAULT_THEME.name;
 const DEFAULT_PROFILE = {
   name:'Player One', handle:'', status:'', bio:'',
   avatar:'', banner:'', bannerStyle:'gradient', avatarShape:'circle',
-  avatarPos:'left', discordId:'', leagueRegion:'na1',
+  avatarPos:'left', discordId:'', leagueRegion:'na1', tagStyle:'full', hideTagNumbers:false,
   tags:{}, favorites:[],
   pTheme:{ mode:'app', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#ff8fb8', headFont:'grotesk', bodyFont:'inter', bgEffect:'glow' },
   privacy:{ live:true, followers:true, friends:true, joined:true },
@@ -1067,6 +1082,8 @@ function normalizeProfile(p){
   if (!['circle','rounded','square','hex'].includes(out.avatarShape)) out.avatarShape = 'circle';
   if (!['left','center'].includes(out.avatarPos)) out.avatarPos = 'left';
   delete out.frame;
+  if (!['full','short','logo'].includes(out.tagStyle)) out.tagStyle = 'full';
+  out.hideTagNumbers = !!out.hideTagNumbers;
   if (!LEAGUE_REGIONS.some(r => r[0] === out.leagueRegion)) out.leagueRegion = 'na1';
   // Older saves had one "Riot ID" box: use it for League and Valorant
   if (out.tags.riot){ out.tags.league = out.tags.league || out.tags.riot; out.tags.valorant = out.tags.valorant || out.tags.riot; delete out.tags.riot; }
@@ -1705,7 +1722,7 @@ function buildSnapshot(p = profile){
   return {
     v:1, name:p.name, handle:p.handle, status:p.status, bio:p.bio,
     avatar:p.avatar, banner: p.bannerStyle === 'image' ? p.banner : '',
-    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion,
+    bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion, tagStyle:p.tagStyle, hideTagNumbers:p.hideTagNumbers,
     tags:p.tags, discordId:p.discordId, privacy:p.privacy, sections:p.sections, theme:profileTheme(p),
     stats:{
       games:games.length, completed, rate: finishable ? Math.round(completed / finishable * 100) : null,
@@ -1763,22 +1780,59 @@ function riotParts(v){
 }
 function tagLink(key, value, s){
   const v = String(value).trim(), e = encodeURIComponent;
+  if (key === 'deadlock'){
+    const id = deadlockId(v) || deadlockId(s.tags.steam);
+    return id ? `https://tracklock.gg/players/${id}` : '';
+  }
   const url = safeUrl(v);
   if (url) return url;
   if (key === 'steam'){ const id = steamIdFrom(v); return /^\d{17}$/.test(id) ? `https://steamcommunity.com/profiles/${id}` : `https://steamcommunity.com/id/${e(id)}`; }
   if (key === 'league'){ const r = riotParts(v); return r ? `https://u.gg/lol/profile/${s.leagueRegion || 'na1'}/${e((r[0] + '-' + r[1]).toLowerCase())}/overview` : ''; }
   if (key === 'valorant'){ const r = riotParts(v); return r ? `https://u.gg/val/profile/${e(r[0])}-${e(r[1])}` : ''; }
-  if (key === 'deadlock'){ const id = deadlockId(v) || deadlockId(s.tags.steam && steamIdFrom(s.tags.steam)); return id ? `https://tracklock.gg/players/${id}` : ''; }
   if (key === 'xbox') return `https://www.xbox.com/play/user/${e(v)}`;
   if (key === 'psn') return `https://psnprofiles.com/${e(v)}`;
   if (key === 'discord' && s.discordId) return `https://discord.com/users/${s.discordId}`;
   return '';
 }
-function tagText(key, value){
+function tagText(key, value, s){
   const v = String(value).trim();
+  if (key === 'deadlock') return 'Stats';
+  if (s && s.hideTagNumbers && ['league','valorant','battlenet'].includes(key)){ const r = riotParts(v); if (r) return r[0]; }
   if (!safeUrl(v)) return v;
   if (key === 'steam') return steamIdFrom(v);
   try { const u = new URL(v); return u.hostname.replace(/^www\./, '') + u.pathname.replace(/\/$/, ''); } catch(e){ return v; }
+}
+
+/* ---------- Logos for gamer tags ----------
+   Most come from Simple Icons (free brand icons). Xbox, Switch and
+   Deadlock aren't in that set, so they get simple drawn icons. */
+const TAG_SHORT = { steam:'Steam', league:'LoL', valorant:'VAL', deadlock:'DL', battlenet:'B.net', epic:'Epic', xbox:'Xbox', psn:'PSN', switch:'Switch', discord:'Discord' };
+const LOGO_SLUGS = { steam:'steam', league:'leagueoflegends', valorant:'valorant', battlenet:'battledotnet', epic:'epicgames', psn:'playstation', discord:'discord' };
+const DRAWN_LOGOS = {
+  xbox: '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M7.8 7.2 16.2 16.8M16.2 7.2 7.8 16.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+  switch: '<rect x="2.5" y="3" width="8.5" height="18" rx="4.25"/><rect x="13.3" y="4.2" width="7.6" height="15.6" rx="3.8" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="6.75" cy="8.2" r="1.7" fill="var(--panel-2)"/><circle cx="17.1" cy="14.6" r="1.7"/>',
+  deadlock: '<path d="M7 10V7.5a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="4" y="10" width="16" height="12" rx="3"/><circle cx="12" cy="15.2" r="1.9" fill="var(--panel-2)"/><path d="M11 16h2v3h-2z" fill="var(--panel-2)"/>'
+};
+function logoHTML(key, label){
+  if (DRAWN_LOGOS[key]) return `<span class="tag-logo" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 24 24" aria-hidden="true">${DRAWN_LOGOS[key]}</svg></span>`;
+  return `<span class="tag-logo" role="img" aria-label="${esc(label)}" data-logo="${LOGO_SLUGS[key]}"><small>${esc(TAG_SHORT[key])}</small></span>`;
+}
+const logoCache = {};
+function loadLogo(slug){
+  if (!logoCache[slug]){
+    logoCache[slug] = fetch(`https://cdn.jsdelivr.net/npm/simple-icons@16/icons/${slug}.svg`)
+      .then(r => r.ok ? r.text() : '')
+      .then(t => { const m = t.match(/<path[^>]*\sd="([^"]+)"/); return m && /^[MmLlHhVvCcSsQqTtAaZz0-9.,\s-]+$/.test(m[1]) ? m[1] : ''; })
+      .catch(() => '');
+  }
+  return logoCache[slug];
+}
+// Swap the short-name placeholders for real logos once they've loaded
+function hydrateLogos(root){
+  root.querySelectorAll('[data-logo]').forEach(async el => {
+    const d = await loadLogo(el.dataset.logo);
+    if (d && el.isConnected){ el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`; el.removeAttribute('data-logo'); }
+  });
 }
 
 /* ---------- Drawing a profile ---------- */
@@ -1873,10 +1927,12 @@ function profileHTML(s, m){
 
   const tags = GAMER_TAGS.filter(([k]) => s.tags[k]).map(([k, label]) => {
     const link = tagLink(k, s.tags[k], s);
-    const text = esc(tagText(k, s.tags[k])) + (k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === s.leagueRegion) || ['', 'NA'])[1])}</small>` : '');
+    const region = k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === s.leagueRegion) || ['', 'NA'])[1])}</small>` : '';
+    const text = esc(tagText(k, s.tags[k], s)) + region;
+    const name = s.tagStyle === 'logo' ? logoHTML(k, label) : `<small>${esc(s.tagStyle === 'short' ? TAG_SHORT[k] : label)}</small>`;
     return link
-      ? `<a class="tag" href="${esc(link)}" target="_blank" rel="noopener"><small>${label}</small>${text}<span class="go">↗</span></a>`
-      : `<button class="tag" data-copy="${esc(s.tags[k])}" title="Click to copy"><small>${label}</small>${text}</button>`;
+      ? `<a class="tag" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(label)}">${name}${text}<span class="go">↗</span></a>`
+      : `<button class="tag" data-copy="${esc(s.tags[k])}" title="${esc(label)}: click to copy">${name}${text}</button>`;
   }).join('');
 
   const sections = s.sections.filter(x => x.on).map(x => {
@@ -1915,6 +1971,7 @@ function paintProfile(snap, meta){
   }
   currentMeta = meta;
   $('pBody').innerHTML = profileHTML(snap, meta);
+  hydrateLogos($('pBody'));
   paintLive(snap, meta);
 }
 
@@ -2238,7 +2295,7 @@ const TAG_HELP = {
   steam:['(profile link or name)', 'steamcommunity.com/id/…'],
   league:['(Riot ID → opens U.GG)', 'Name#TAG'],
   valorant:['(Riot ID → opens U.GG)', 'Name#TAG'],
-  deadlock:['(Steam ID → opens Tracklock)', '7656119… or Steam profile link'],
+  deadlock:['(Steam ID number → opens U.GG Tracklock)', '76561198… or steamcommunity.com/profiles/…'],
   battlenet:['', 'Name#1234'], switch:['', 'SW-1234-5678-9012']
 };
 $('pTags').innerHTML = GAMER_TAGS.map(([k, label]) => {
@@ -2246,8 +2303,18 @@ $('pTags').innerHTML = GAMER_TAGS.map(([k, label]) => {
   const input = `<input type="text" id="tag-${k}" data-tag="${k}" maxlength="120" placeholder="${esc(ph)}">`;
   return `<div><label for="tag-${k}">${label} ${help ? `<span class="hint">${help}</span>` : ''}</label>${k === 'league'
     ? `<div style="display:grid;grid-template-columns:1fr 90px;gap:6px">${input}<select id="pLeagueRegion" aria-label="League region">${LEAGUE_REGIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></div>`
-    : input}</div>`;
+    : input}${k === 'deadlock' ? '<div class="name-state" id="dlState"></div>' : ''}</div>`;
 }).join('');
+// Tell people right away whether their Deadlock link will work
+function checkDeadlock(){
+  const v = $('tag-deadlock').value.trim(), el = $('dlState');
+  const id = deadlockId(v) || deadlockId($('tag-steam').value.trim());
+  if (!v){ el.textContent = ''; return; }
+  if (id){ el.textContent = '✓ Opens tracklock.gg/players/' + id; el.className = 'name-state ok'; }
+  else { el.innerHTML = 'Needs your Steam ID number (starts with 7656…). Find it at <a href="https://steamid.io" target="_blank" rel="noopener">steamid.io</a>'; el.className = 'name-state err'; }
+}
+$('tag-deadlock').addEventListener('input', checkDeadlock);
+$('tag-steam').addEventListener('input', checkDeadlock);
 fillSelect($('ptHead'), Object.entries(FONTS).map(([k, f]) => [k, f[0]]));
 fillSelect($('ptBody'), BODY_FONTS.map(k => [k, FONTS[k][0]]));
 watchNameInput($('pUsername'), $('pUserState'));
@@ -2265,6 +2332,8 @@ function openProfileEditor(){
   $('pStatus').value = draft.status; $('pBio').value = draft.bio;
   $('pShape').value = draft.avatarShape; $('pBannerStyle').value = draft.bannerStyle;
   $('pAvatarPos').value = draft.avatarPos; $('pLeagueRegion').value = draft.leagueRegion;
+  $('pTagStyle').value = draft.tagStyle; $('pHideNums').checked = draft.hideTagNumbers;
+  checkDeadlock();
   $('pDiscordId').value = draft.discordId;
   document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
   $('pvLive').checked = draft.privacy.live; $('pvFollowers').checked = draft.privacy.followers;
@@ -2288,6 +2357,7 @@ function readProfileForm(){
   draft.bio = $('pBio').value.trim();
   draft.avatarShape = $('pShape').value; draft.bannerStyle = $('pBannerStyle').value;
   draft.avatarPos = $('pAvatarPos').value; draft.leagueRegion = $('pLeagueRegion').value;
+  draft.tagStyle = $('pTagStyle').value; draft.hideTagNumbers = $('pHideNums').checked;
   draft.discordId = $('pDiscordId').value.trim();
   draft.tags = {};
   document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
