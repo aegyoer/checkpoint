@@ -340,6 +340,10 @@ dialog > form{display:contents}
 .live-card small{display:block;color:var(--muted);font-size:.72rem}
 .live-card b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
 .live-card div{min-width:0}
+.live-card .rp-line{display:block;color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.live-card img.rp-art{width:48px;height:48px;object-fit:cover;border-radius:8px}
+.live-card .rp-pic{position:relative;flex-shrink:0;line-height:0}
+.live-card .rp-pic .rp-small{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;border:2px solid var(--panel-2);object-fit:cover}
 .st-ingame .dot{background:#90ba3c} .st-ingame b{color:#90ba3c}
 .st-online .dot{background:#57cbde}
 .st-idle .dot{background:#f0b232} .st-dnd .dot{background:#f23f43}
@@ -1607,6 +1611,7 @@ $('gameForm').addEventListener('submit', e => {
     cover: picked ? picked.cover : '', rawgId: picked ? picked.rawgId : null,
     genres: picked ? picked.genres : [], released: picked ? picked.released : ''
   };
+  if (picked && picked.steamAppId) data.steamAppId = picked.steamAppId;   // lets you pick Steam artwork later
   if (editingId){
     const i = games.findIndex(g => g.id === editingId);
     games[i] = normalizeGame({ ...games[i], ...data });
@@ -1625,7 +1630,7 @@ $('gameForm').addEventListener('submit', e => {
 });
 
 /* ---------- Game search ----------
-   Works with no setup: it searches Wikipedia's video game articles.
+   Works with no setup: it searches Wikipedia, Wikidata and the Steam store together.
    If you add a RAWG key (top of the script), it uses RAWG instead,
    which has bigger banners and more info. */
 const sugBox = $('fSuggest');
@@ -1667,19 +1672,26 @@ async function searchRawg(q, signal){
   });
 }
 
+// Is this description about one game? ("2013 browser game", "visual novel", "mobile RPG"…)
+const GAME_WORDS = /\b(video|browser|mobile|online|web|computer|pc|arcade|indie|social|free-to-play|rhythm|puzzle|platform(er)?|role-playing|strategy|simulation|action|adventure|horror|shooter|racing|sports|fighting|dating|party|idle|gacha|text|flash|survival|sandbox|stealth|music|tactical|turn-based|real-time|educational|interactive)[\s-]+games?\b|\bvideo ?games?\b|visual novel|\bMMO(RPG)?\b|roguelike|roguelite|metroidvania|\bJ?RPG\b|eroge|dating sim|bullet hell|shoot 'em up|beat 'em up|hack and slash|first-person|third-person/i;
+const NOT_GAME = /\bseries\b|franchise|\bcharacters?\b|soundtrack|\bmusic\b|\balbum\b|\bsong\b|\bcompany\b|developer|publisher|\bstudio\b|\bplayers?\b|esports|tournament|championship|award|ceremony|convention|game engine|console|handheld|\bfilm\b|television|\banime\b|manga|novel(?! game)|expansion pack|\bgenre\b|magazine|website|journalist|designer|programmer|board game|tabletop|card game(?!.*video)|game show|gamebook|\bterm\b|concept|\blist of\b|controller|\bmod\b/i;
+const isGameText = d => !!d && GAME_WORDS.test(d) && !NOT_GAME.test(d.replace(/visual novel/ig, ''));
+const GAME_SENTENCE = /\b(is|was) an? [^.]{0,140}?\b(video|browser|mobile|online|web|computer|arcade|indie|role-playing|strategy|rhythm|puzzle|action|adventure|free-to-play|social|card|horror|simulation|platform)?[\s-]?game\b(?! (show|engine|designer|company|studio|developer|publisher|series|franchise))|\b(is|was) an? [^.]{0,100}?(visual novel|MMORPG|roguelike|metroidvania)/i;
+
 async function searchWikipedia(q, signal){
   const params = new URLSearchParams({
     action:'query', format:'json', origin:'*', redirects:'1',
-    generator:'search', gsrsearch:q + ' video game', gsrnamespace:'0', gsrlimit:'15',
-    prop:'pageimages|description', piprop:'thumbnail', pithumbsize:'640', pilicense:'any'
+    generator:'search', gsrsearch:q + ' game', gsrnamespace:'0', gsrlimit:'20',
+    prop:'pageimages|description|extracts', piprop:'thumbnail', pithumbsize:'640', pilicense:'any',
+    exintro:'1', explaintext:'1', exsentences:'1', exlimit:'20'
   });
   const res = await fetch('https://en.wikipedia.org/w/api.php?' + params, { signal });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const data = await res.json();
   const pages = Object.values((data.query && data.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
   return pages
-    .filter(p => /video game/i.test(p.description || '') &&
-                 !/\bseries\b|franchise|\bcharacter|soundtrack|\bcompany|developer|publisher|\bplayers?\b|esports team|tournament|game engine|console|\bfilm\b|novel|expansion pack/i.test(p.description || ''))
+    .filter(p => isGameText(p.description) || (!p.description && /\(video game\)$/i.test(p.title)) ||
+                 (!NOT_GAME.test(p.description || '') && GAME_SENTENCE.test(p.extract || '')))
     .slice(0, 6)
     .map(p => {
       const d = String(p.description || '');
@@ -1695,12 +1707,68 @@ async function searchWikipedia(q, signal){
     });
 }
 
+// Wikidata knows far more games than Wikipedia (lots of indie, mobile and Japan-only ones)
+async function searchWikidata(q, signal){
+  const base = 'https://www.wikidata.org/w/api.php?';
+  const found = await (await fetch(base + new URLSearchParams({ action:'wbsearchentities', format:'json', origin:'*', language:'en', uselang:'en', type:'item', limit:'20', search:q }), { signal })).json();
+  const hits = (found.search || []).filter(h => isGameText(h.description || '')).slice(0, 8);
+  if (!hits.length) return [];
+  const ent = await (await fetch(base + new URLSearchParams({ action:'wbgetentities', format:'json', origin:'*', ids:hits.map(h => h.id).join('|'), props:'claims|labels', languages:'en' }), { signal })).json();
+  return hits.map(h => {
+    const c = (ent.entities && ent.entities[h.id] && ent.entities[h.id].claims) || {};
+    const val = k => c[k] && c[k][0] && c[k][0].mainsnak && c[k][0].mainsnak.datavalue && c[k][0].mainsnak.datavalue.value;
+    const steam = Number(val('P1733')) || null;
+    const date = val('P577'), year = date && date.time ? (String(date.time).match(/^\+?(\d{4})/) || [])[1] || '' : '';
+    const d = String(h.description || '');
+    const genre = d.replace(/\b(19|20)\d\d\b/, '').replace(/video ?game/i, '').replace(/^\s*(upcoming|an?|the)\s+/i, '').replace(/\s+/g, ' ').trim();
+    const name = String(h.label || h.match && h.match.text || '').slice(0, 120);
+    return { name, image: steam ? steamHeader(steam) : '', rawgId:null, steamAppId:steam,
+             year: year || (d.match(/\b(19[7-9]\d|20\d\d)\b/) || [])[1] || '',
+             info: genre ? genre[0].toUpperCase() + genre.slice(1) : 'Video game', genres: genre ? [genre[0].toUpperCase() + genre.slice(1)] : [],
+             pvp: looksPvp(name, d) };
+  }).filter(r => r.name);
+}
+// Everything sold on Steam, through your Steam helper (skipped quietly if it isn't set up)
+async function searchSteamStore(q, signal){
+  if (!accountsOn()) return [];
+  const r = await fetch(`${STEAM_FN}?action=search&q=${encodeURIComponent(q)}`, { headers:{ apikey:SUPABASE_KEY }, signal });
+  if (!r.ok) return [];
+  const j = await r.json();
+  return (j.items || []).filter(i => Number.isInteger(i.appid) && i.name).slice(0, 8).map(i => ({
+    name:String(i.name).slice(0, 120), image:steamHeader(i.appid), rawgId:null, steamAppId:i.appid,
+    year:'', info:'On Steam', genres:[], pvp:looksPvp(String(i.name), '') }));
+}
+const withTimeout = (p, ms) => Promise.race([p, new Promise(res => setTimeout(() => res([]), ms))]);
+async function searchAll(q, signal){
+  const sources = RAWG_KEY ? [searchRawg(q, signal)] : [searchWikipedia(q, signal), searchWikidata(q, signal), searchSteamStore(q, signal)];
+  const lists = await Promise.all(sources.map(p => withTimeout(p.catch(err => { if (err.name === 'AbortError') throw err; return []; }), 5000)));
+  if (signal.aborted) throw new DOMException('aborted', 'AbortError');
+  const key = t => normTitle(String(t).replace(/\s*\((\d{4} )?video game\)$/i, ''));
+  const out = new Map();
+  for (const list of lists) for (const r of list){
+    const k = key(r.name);
+    if (!k) continue;
+    const had = out.get(k);
+    if (!had) out.set(k, r);
+    else {   // same game from two places: fill in what's missing
+      if (!had.image && r.image) had.image = r.image;
+      if (!had.steamAppId && r.steamAppId) had.steamAppId = r.steamAppId;
+      if (!had.year && r.year) had.year = r.year;
+      if ((!had.info || had.info === 'On Steam' || had.info === 'Video game') && r.info && r.info !== 'On Steam') { had.info = r.info; had.genres = r.genres; }
+      had.pvp = had.pvp || r.pvp;
+    }
+  }
+  // Closest names first (exact, then starts with, then contains), keeping each source's order otherwise
+  const nq = normTitle(q), score = r => { const n = key(r.name); return n === nq ? 0 : n.startsWith(nq) ? 1 : n.includes(nq) ? 2 : 3; };
+  return [...out.values()].map((r, i) => [r, score(r), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]).slice(0, 8);
+}
+
 async function searchGames(q){
   if (sugAbort) sugAbort.abort();
   sugAbort = new AbortController();
   sugMsg('Searching…');
   try {
-    sugResults = RAWG_KEY ? await searchRawg(q, sugAbort.signal) : await searchWikipedia(q, sugAbort.signal);
+    sugResults = await searchAll(q, sugAbort.signal);
     sugIndex = -1;
     if (!sugResults.length) return sugMsg('No matches. You can still add it by name.');
     sugBox.innerHTML = sugResults.map((r, i) => `<button type="button" class="sug" data-i="${i}">
@@ -1715,7 +1783,7 @@ async function searchGames(q){
 }
 
 function pickResult(r){
-  picked = { name:r.name, cover:r.image, rawgId:r.rawgId, genres:r.genres, released:r.year === 'Upcoming' ? '' : r.year };
+  picked = { name:r.name, cover:r.image, rawgId:r.rawgId, steamAppId:r.steamAppId || null, genres:r.genres, released:r.year === 'Upcoming' ? '' : r.year };
   $('fTitle').value = r.name;
   hideSug(); renderPicked();
   if (!editingId && formType !== 'pvp' && r.pvp){
@@ -2504,7 +2572,19 @@ async function fetchLive(key){
       const j = await r.json();
       if (j && j.success && j.data){
         const d = j.data, act = (d.activities || []).find(a => a.type === 0);
+        const art = k => {   // Discord rich-presence pictures (champion, map, rank…)
+          const v = act && act.assets && act.assets[k + '_image'];
+          if (!v || typeof v !== 'string') return '';
+          if (v.startsWith('mp:')) return 'https://media.discordapp.net/' + v.slice(3).replace(/^\/+/, '');
+          if (/^\d+$/.test(v) && /^\d+$/.test(String(act.application_id || ''))) return `https://cdn.discordapp.com/app-assets/${act.application_id}/${v}.png`;
+          return '';
+        };
+        const txt = (v, n) => v ? String(v).slice(0, n) : '';
         data = { kind, state:String(d.discord_status || 'offline'), game:act ? String(act.name) : '',
+                 details: txt(act && act.details, 120), rpState: txt(act && act.state, 120),
+                 start: act && act.timestamps && Number(act.timestamps.start) || 0,
+                 big: art('large'), bigText: txt(act && act.assets && act.assets.large_text, 80),
+                 small: art('small'), smallText: txt(act && act.assets && act.assets.small_text, 80),
                  song: d.listening_to_spotify && d.spotify ? `${d.spotify.song} – ${d.spotify.artist}` : '' };
       }
     }
@@ -2528,7 +2608,15 @@ function liveCardHTML(d, isMe){
     return `<div class="live-card ${st}"><span class="dot"></span><div><small>Steam</small><b>${esc(label)}</b></div></div>`;
   }
   const st = { online:'st-online', idle:'st-idle', dnd:'st-dnd' }[d.state] || '';
-  if (d.game) return `<div class="live-card st-ingame"><span class="dot"></span><div><small>Playing on Discord</small><b>${esc(d.game)}</b></div></div>`;
+  if (d.game){
+    // Live match info games share through Discord (League: mode, In Game / In Queue, champion, timer)
+    const mins = d.start ? Math.max(0, Math.floor((Date.now() - d.start) / 60000)) : -1;
+    const time = mins < 0 ? '' : mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    const pic = d.big ? `<span class="rp-pic"><img class="rp-art" src="${esc(d.big)}" alt="" title="${esc(d.bigText)}">${d.small ? `<img class="rp-small" src="${esc(d.small)}" alt="" title="${esc(d.smallText)}">` : ''}</span>` : '<span class="dot"></span>';
+    const extra = [d.rpState, d.bigText && d.bigText !== d.game && d.bigText !== d.details ? d.bigText : '', d.smallText].filter(Boolean);
+    const lines = [d.details, extra.join(' · ')].filter(Boolean).map(t => `<span class="rp-line">${esc(t)}</span>`).join('');
+    return `<div class="live-card st-ingame">${pic}<div><small>Playing${time ? ' · ' + time : ''}</small><b>${esc(d.game)}</b>${lines}</div></div>`;
+  }
   if (d.song) return `<div class="live-card st-online"><span class="dot"></span><div><small>Listening on Spotify</small><b>${esc(d.song)}</b></div></div>`;
   const label = { online:'Online', idle:'Away', dnd:'Do not disturb' }[d.state] || 'Offline';
   return `<div class="live-card ${st}"><span class="dot"></span><div><small>Discord</small><b>${label}</b></div></div>`;
