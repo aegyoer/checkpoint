@@ -405,7 +405,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 @media (max-width:640px){ .modes{grid-template-columns:1fr} }
 
 /* Toast message */
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:500;pointer-events:none;transition:.2s;z-index:100}
+.toast{max-width:min(520px,calc(100vw - 32px));text-align:center;position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:500;pointer-events:none;transition:.2s;z-index:100}
 .toast.show{opacity:1;transform:translateX(-50%)}
 
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36px;border-top:1px solid var(--line)}
@@ -1074,7 +1074,11 @@ function luminance(hex){ const n = parseInt(hex.slice(1), 16); return (0.299 * (
 
 let toastTimer;
 function toast(msg){
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  const t = $('toast');
+  // Pop-up windows sit on top of everything, so put the message inside the top one
+  const open = [...document.querySelectorAll('dialog[open]')].pop();
+  (open || document.body).appendChild(t);
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
@@ -2675,18 +2679,35 @@ function renderSteamLinkBox(){
   }
 }
 
+function steamLinkMsg(text){
+  const box = $('steamLink');
+  let el = $('steamLinkMsg');
+  if (!el && box){ el = document.createElement('div'); el.id = 'steamLinkMsg'; el.className = 'name-state err'; el.style.flexBasis = '100%'; box.appendChild(el); }
+  if (el) el.innerHTML = text;
+  toast(el ? el.textContent : text);
+}
 async function connectSteam(){
   if (!user) return openAccount();
+  const btn = $('steamConnect');
+  if (btn){ btn.disabled = true; btn.lastChild.textContent = ' Connecting…'; }
   try {
     const { data:{ session } } = await sb.auth.getSession();
     const r = await fetch(`${STEAM_FN}?action=start&return=${encodeURIComponent(location.origin + location.pathname)}`,
       { headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer ' + session.access_token } });
-    const j = await r.json();
-    if (!j.url) return toast(j.error || "Couldn't start Steam sign-in");
-    if (syncTimer) await pushNow();
-    location.href = j.url;                       // Steam's own sign-in page
+    const j = await r.json().catch(() => ({}));
+    if (j.url){
+      if (syncTimer) await pushNow();
+      location.href = j.url;                       // Steam's own sign-in page
+      return;
+    }
+    if (r.status === 404) steamLinkMsg('The Steam helper isn\'t deployed yet. In Supabase, deploy the <b>steam</b> function (its file must be named <b>index.ts</b>).');
+    else if (r.status === 401 && !j.error) steamLinkMsg('Supabase blocked it. Turn <b>off "Verify JWT"</b> for the steam function in Supabase, then try again.');
+    else if (/STEAM_API_KEY/.test(j.error || '')) steamLinkMsg('Add your Steam key in Supabase: Edge Functions → Secrets → <b>STEAM_API_KEY</b>.');
+    else steamLinkMsg(esc(j.error || `Couldn't start Steam sign-in (error ${r.status}).`));
   } catch(err){
-    toast("The Steam helper isn't set up yet");
+    steamLinkMsg('Couldn\'t reach the Steam helper. Make sure the <b>steam</b> function is deployed in Supabase and "Verify JWT" is off.');
+  } finally {
+    if (btn && btn.isConnected){ btn.disabled = false; btn.lastChild.textContent = ' Connect Steam'; }
   }
 }
 
