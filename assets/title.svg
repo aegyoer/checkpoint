@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 150" width="640" height="150">
+  <!-- Pink sticker-style "Checkpoint" title with twinkling sparkles and floating hearts -->
+  <style>
+    .t{font-family:"Arial Rounded MT Bold","Nunito","Varela Round","Trebuchet MS",sans-serif;font-weight:800;font-size:80px;letter-spacing:-1px}
+    .bob{animation:bob 3s ease-in-out infinite;transform-origin:320px 80px}
+    @keyframes bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
+    .tw{animation:tw 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .d1{animation-delay:.4s}.d2{animation-delay:.8s}.d3{animation-delay:1.2s}
+    @keyframes tw{0%,100%{opacity:.25;transform:scale(.55) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+    .fl{animation:fl 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .f2{animation-delay:1.3s}
+    @keyframes fl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.12)}}
+  </style>
+  <defs>
+    <path id="s" d="M0 -11 L2.6 -2.6 L11 0 L2.6 2.6 L0 11 L-2.6 2.6 L-11 0 L-2.6 -2.6Z"/>
+    <path id="h" d="M0 -4 c-3 -6 -12 -5 -12 2 c0 6 12 12 12 12 c0 0 12 -6 12 -12 c0 -7 -9 -8 -12 -2z"/>
+  </defs>
+
+  <g class="bob">
+    <!-- shadow, white outline, then pink fill = sticker look -->
+    <text x="324" y="104" text-anchor="middle" class="t" fill="#c2185b" opacity=".45">Checkpoint</text>
+    <text x="320" y="100" text-anchor="middle" class="t" fill="#fff" stroke="#fff" stroke-width="14" stroke-linejoin="round">Checkpoint</text>
+    <text x="320" y="100" text-anchor="middle" class="t" fill="#ff5fa2">Checkpoint</text>
+    <ellipse cx="200" cy="58" rx="30" ry="7" fill="#fff" opacity=".45"/>
+  </g>
+
+  <g transform="translate(46 50)"><use class="fl" href="#h" fill="#ff8fb8"/></g>
+  <g transform="translate(598 96) scale(.8)"><use class="fl f2" href="#h" fill="#ff8fb8"/></g>
+  <g transform="translate(86 112) scale(.7)"><use class="tw d1" href="#s" fill="#ffd36e"/></g>
+  <g transform="translate(600 36)"><use class="tw" href="#s" fill="#c9a4ff"/></g>
+  <g transform="translate(26 102) scale(.55)"><use class="tw d2" href="#s" fill="#7fd8d2"/></g>
+  <g transform="translate(560 128) scale(.5)"><use class="tw d3" href="#s" fill="#ffd36e"/></g>
+</svg>
