@@ -56,6 +56,8 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 ˚₊ A profile theme everyone sees, or match it to your picture<br>
 ˚₊ Badges you earn as you play<br>
 ˚₊ Gamer tags that open your U.GG, Tracklock and Steam pages<br>
+˚₊ Connect Steam for verified hours that can't be faked<br>
+˚₊ Steam achievements tracked for every game 🏆<br>
 ˚₊ Live "now playing" from Steam and Discord<br>
 ˚₊ Friends and followers, you choose what's shown
 
@@ -116,7 +118,9 @@ Most trackers expect every game to have an ending. Checkpoint gives PvP games th
 - [x] Accounts that save everywhere
 - [x] Public profiles, usernames and friends
 - [x] Live Steam and Discord status
-- [ ] Steam library import
+- [x] Steam sign-in with verified hours + library import
+- [x] Steam achievements
+- [ ] League and Valorant ranks (waiting on Riot)
 - [ ] Community checklists
 
 ## Found a bug or have an idea? ( ˘▽˘)っ♡
