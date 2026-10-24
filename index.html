@@ -407,7 +407,28 @@ button.rank-row:hover{border-color:var(--accent)}
 .sec-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .sec-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel-2);padding:6px 6px 6px 12px;border-radius:calc(var(--radius) * .7)}
 .sec-list span{display:flex;gap:4px}
-.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tag-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;align-items:start}
+.tag-grid label{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag-grid .name-state,.tag-grid .steam-link{margin-top:6px}
+.tag-wide{grid-column:1 / -1;border-top:1px solid var(--line);padding-top:12px}
+.tag-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tag-note{margin:6px 0 0;font-size:.78rem}
+/* Specs */
+.spec-edit{width:100%;border-collapse:collapse}
+.spec-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;align-items:start}
+.spec-edit caption{text-align:left;font-weight:700;font-size:.9rem;padding:0 0 4px}
+.spec-edit th{text-align:left;font-weight:600;font-size:.82rem;color:var(--muted);padding:3px 10px 3px 0;width:104px;white-space:nowrap;vertical-align:middle}
+.spec-edit th label{margin:0;display:inline;font-size:inherit;color:inherit}
+.spec-edit td{padding:3px 0;vertical-align:middle}
+.spec-edit input{width:100%;padding-top:8px;padding-bottom:8px}
+.spec-extra{display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:center;margin-top:6px}
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.spec-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:.9rem}
+.spec-table caption{text-align:left;font-weight:700;padding:0 0 6px;color:var(--accent)}
+.spec-table th,.spec-table td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.spec-table tr:last-child th,.spec-table tr:last-child td{border-bottom:0}
+.spec-table th{color:var(--muted);font-weight:600;width:40%;white-space:nowrap}
+.spec-table td{overflow-wrap:anywhere}
 .ed-group{border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:12px}
 .ed-group > h3{margin:0;font-size:.98rem}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -468,7 +489,10 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
   .hide-sm{display:none}
   .stats{grid-template-columns:repeat(2,1fr)}
   .p-stats{grid-template-columns:repeat(2,1fr)}
-  .row,.row3,.tag-grid,.clip-form{grid-template-columns:1fr}
+  .row,.row3,.tag-grid,.clip-form,.tag-pair{grid-template-columns:1fr}
+  .spec-cols{grid-template-columns:1fr}
+  .spec-edit th{width:96px}
+  .spec-extra{grid-template-columns:96px 1fr auto}
   .colors{grid-template-columns:repeat(2,1fr)}
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .cover span{font-size:1.5rem}
@@ -995,6 +1019,14 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px 16px 36
       </div>
 
       <div class="ed-group">
+        <h3>My specs</h3>
+        <p class="hint">Fill in what you want to show. Empty rows stay hidden.</p>
+        <div class="spec-cols" id="pSpecs"></div>
+        <div id="pSpecExtra"></div>
+        <div><button type="button" class="btn small" id="pSpecAdd">+ Add your own row</button></div>
+      </div>
+
+      <div class="ed-group">
         <h3>Privacy</h3>
         <div class="checks">
           <label class="check"><input type="checkbox" id="pvLive"> Show what I'm playing (live)</label>
@@ -1151,7 +1183,15 @@ const PVP_STATUS   = { main:'Main game', casual:'Casual', break:'On a break', re
 const PLATFORMS = ['Steam','Epic Games','Battle.net','Riot','EA app','Ubisoft Connect','GOG','Xbox','PlayStation','Nintendo Switch','PC (other)','Mobile','Other'];
 const GAMER_TAGS = [['steam','Steam'],['league','League of Legends'],['valorant','Valorant'],['deadlock','Deadlock'],['battlenet','Battle.net'],['epic','Epic Games'],['xbox','Xbox'],['psn','PlayStation'],['switch','Switch'],['discord','Discord']];
 const LEAGUE_REGIONS = [['na1','NA'],['euw1','EUW'],['eun1','EUNE'],['kr','KR'],['br1','BR'],['la1','LAN'],['la2','LAS'],['oc1','OCE'],['tr1','TR'],['ru','RU'],['jp1','JP'],['me1','ME'],['ph2','PH'],['sg2','SG'],['th2','TH'],['tw2','TW'],['vn2','VN']];
-const SECTION_LABELS = { badges:'Badges', stats:'Stats', steam:'Steam ✓', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', collection:'Physical collection', friends:'Friends' };
+const SECTION_LABELS = { badges:'Badges', stats:'Stats', steam:'Steam ✓', playing:'Now playing', favorites:'Favorite games', ranks:'PvP ranks', clips:'Recent clips', collection:'Physical collection', specs:'My specs', friends:'Friends' };
+// The rows of the specs table (fill in the ones you want, empty ones are hidden)
+const SPEC_GROUPS = [
+  ['PC', [['cpu','CPU','e.g. Ryzen 7 7800X3D'],['gpu','Graphics card','e.g. RTX 4070 Super'],['ram','RAM','e.g. 32 GB DDR5'],['storage','Storage','e.g. 2 TB NVMe SSD'],
+          ['mobo','Motherboard',''],['cooler','Cooling',''],['psu','Power supply',''],['case','Case',''],['os','System','e.g. Windows 11']]],
+  ['Gear', [['monitor','Monitor','e.g. 27" 1440p 165 Hz'],['keyboard','Keyboard',''],['mouse','Mouse',''],['mousepad','Mousepad',''],
+            ['headset','Headset',''],['mic','Microphone',''],['controller','Controller',''],['chair','Chair','']]]
+];
+const SPEC_KEYS = SPEC_GROUPS.flatMap(g => g[1].map(r => r[0]));
 // Physical collection choices
 const PHYS_PLATFORMS = ['PlayStation 5','PlayStation 4','PlayStation 3','PlayStation 2','PlayStation','PSP','PS Vita','Nintendo Switch 2','Nintendo Switch','Wii U','Wii','GameCube','Nintendo 64','SNES','NES','Nintendo 3DS','Nintendo DS','Game Boy Advance','Game Boy / Color','Xbox Series X|S','Xbox One','Xbox 360','Xbox','Sega Dreamcast','Sega Saturn','Sega Genesis / Mega Drive','PC (physical)','Other'];
 const EDITIONS = ['Standard',"Collector's",'Limited','Deluxe','Special','Steelbook',"Greatest Hits / Player's Choice",'Other'];
@@ -1198,7 +1238,7 @@ const DEFAULT_PROFILE = {
   tags:{}, favorites:[],
   pTheme:{ mode:'app', bg:'#0d0f14', panel:'#161a22', text:'#e8ebf1', accent:'#ff8fb8', headFont:'grotesk', bodyFont:'inter', bgEffect:'glow' },
   privacy:{ live:true, followers:true, friends:true, joined:true, library:true },
-  sections:[{key:'badges',on:true},{key:'stats',on:true},{key:'steam',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true},{key:'collection',on:true},{key:'friends',on:true}]
+  sections:[{key:'badges',on:true},{key:'stats',on:true},{key:'steam',on:true},{key:'playing',on:true},{key:'favorites',on:true},{key:'ranks',on:true},{key:'clips',on:true},{key:'collection',on:true},{key:'specs',on:true},{key:'friends',on:true}]
 };
 
 const KEYS = { games:'checkpoint-data-v1', profile:'checkpoint-profile-v1', theme:'checkpoint-theme-v1', collection:'checkpoint-collection-v1' };
@@ -1314,6 +1354,10 @@ function normalizeProfile(p){
   delete out.frame;
   if (!['full','short','logo'].includes(out.tagStyle)) out.tagStyle = 'full';
   out.hideTagNumbers = !!out.hideTagNumbers;
+  const sp = p.specs && typeof p.specs === 'object' ? p.specs : {};
+  out.specs = {}; for (const k of SPEC_KEYS) if (sp[k]) out.specs[k] = String(sp[k]).slice(0, 80);
+  out.specsExtra = (Array.isArray(p.specsExtra) ? p.specsExtra : []).filter(r => r && (r.l || r.v)).slice(0, 10)
+    .map(r => ({ l:String(r.l || '').slice(0, 30), v:String(r.v || '').slice(0, 80) }));
   out.alts = (Array.isArray(p.alts) ? p.alts : []).filter(a => a && GAMER_TAGS.some(t => t[0] === a.key)).slice(0, 20).map(a => ({
     id:String(a.id || uid()), key:a.key, value:String(a.value || '').slice(0, 120),
     region: LEAGUE_REGIONS.some(r => r[0] === a.region) ? a.region : 'na1'
@@ -2132,6 +2176,7 @@ function buildSnapshotRaw(p){
     avatar:p.avatar, banner: p.bannerStyle === 'image' ? p.banner : '',
     bannerStyle:p.bannerStyle, avatarShape:p.avatarShape, avatarPos:p.avatarPos, leagueRegion:p.leagueRegion, tagStyle:p.tagStyle, hideTagNumbers:p.hideTagNumbers, alts:p.alts.filter(a => a.value.trim()),
     tags:p.tags, discordId:p.discordId, privacy:p.privacy, sections:p.sections, theme:profileTheme(p),
+    specs: on('specs') ? p.specs : {}, specsExtra: on('specs') ? p.specsExtra : [],
     stats:{
       games:games.length, completed, rate: finishable ? Math.round(completed / finishable * 100) : null,
       hours:Math.round(games.reduce((s, g) => s + g.hours, 0)),
@@ -2371,6 +2416,15 @@ function sectionHTML(key, s, m){
       </${tag}>`; }).join('')}</div>` : '';
   }
   if (key === 'clips') return s.clips.length ? `<div class="clips">${s.clips.map(clipCardHTML).join('')}</div>` : '';
+  if (key === 'specs'){
+    const sp = s.specs || {};
+    const rows = list => list.map(([l, v]) => `<tr><th scope="row">${esc(l)}</th><td>${esc(v)}</td></tr>`).join('');
+    const tables = SPEC_GROUPS.map(([name, fields]) => [name, fields.filter(f => sp[f[0]]).map(f => [f[1], sp[f[0]]])]);
+    const extra = (s.specsExtra || []).filter(r => r.v).map(r => [r.l || 'Other', r.v]);
+    if (extra.length) tables.push(['More', extra]);
+    const html = tables.filter(t => t[1].length).map(([name, list]) => `<table class="spec-table"><caption>${esc(name)}</caption>${rows(list)}</table>`).join('');
+    return html ? `<div class="specs">${html}</div>` : '';
+  }
   if (key === 'collection'){
     const list = s.collection || [];
     if (!list.length) return '';
@@ -2906,19 +2960,31 @@ const TAG_HELP = {
   league:['(Riot ID → opens U.GG)', 'Name#TAG'],
   valorant:['(Riot ID → opens U.GG)', 'Name#TAG'],
   deadlock:['(Steam ID number → opens U.GG Tracklock)', '76561198… or steamcommunity.com/profiles/…'],
-  battlenet:['', 'Name#1234'], psn:['(online ID)', 'Your PSN name'], switch:['(friend code, copied when clicked)', 'SW-1234-5678-9012']
+  battlenet:['', 'Name#1234'], psn:['(online ID)', 'Your PSN name'], switch:['(friend code)', 'SW-1234-5678-9012']
 };
 // Second boxes under some tags (saved with your tags)
 const TAG_EXTRA = {
-  psn:['psnLink', 'Profile link (optional)', 'https://… link to your PlayStation profile', 'Without one, it opens PSNProfiles. That only works once your name has been added there: go to psnprofiles.com, type your PSN name and press Enter (your trophies need to be public).'],
-  switch:['switchName', 'Name shown on your tag', 'Your Switch user name', "Nintendo doesn't have public profile pages, so clicking your tag copies your friend code for people to add you on their Switch."]
+  psn:['psnLink', 'Profile link', 'Optional: https://…', 'No link? It opens PSNProfiles, which works after you add your name once on psnprofiles.com (trophies set to public).'],
+  switch:['switchName', 'Name on your tag', 'e.g. yuffie', "Nintendo has no public profiles, so clicking your tag copies your friend code."]
 };
-$('pTags').innerHTML = GAMER_TAGS.map(([k, label]) => {
+// Simple boxes first (they pair up neatly), the two-box ones last on full rows
+const TAG_EDIT_ORDER = ['steam','league','valorant','deadlock','battlenet','epic','xbox','discord','psn','switch'];
+$('pTags').innerHTML = TAG_EDIT_ORDER.map(k => [k, GAMER_TAGS.find(t => t[0] === k)[1]]).map(([k, label]) => {
   const [help, ph] = TAG_HELP[k] || ['', ''];
   const input = `<input type="text" id="tag-${k}" data-tag="${k}" maxlength="120" placeholder="${esc(ph)}">`;
+  if (TAG_EXTRA[k]){
+    const [key, lab, ph2, help2] = TAG_EXTRA[k];
+    return `<div class="tag-wide">
+      <div class="tag-pair">
+        <div><label for="tag-${k}">${label} ${help ? `<span class="hint">${help}</span>` : ''}</label>${input}</div>
+        <div><label for="tag-${key}">${lab}</label><input type="text" id="tag-${key}" data-tag="${key}" maxlength="120" placeholder="${esc(ph2)}"></div>
+      </div>
+      <p class="hint tag-note">${help2}</p>
+    </div>`;
+  }
   return `<div><label for="tag-${k}">${label} ${help ? `<span class="hint">${help}</span>` : ''}</label>${k === 'league'
     ? `<div style="display:grid;grid-template-columns:1fr 90px;gap:6px">${input}<select id="pLeagueRegion" aria-label="League region">${LEAGUE_REGIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></div>`
-    : input}${TAG_EXTRA[k] ? (([key, lab, ph2, help2]) => `<label for="tag-${key}" class="sub-label">${lab}</label><input type="text" id="tag-${key}" data-tag="${key}" maxlength="120" placeholder="${esc(ph2)}"><p class="hint" style="margin:4px 0 0">${help2}</p>`)(TAG_EXTRA[k]) : ''}${k === 'deadlock' ? '<div class="name-state" id="dlState"></div>' : ''}${k === 'steam' ? '<div class="steam-link" id="steamLink"></div>' : ''}</div>`;
+    : input}${k === 'deadlock' ? '<div class="name-state" id="dlState"></div>' : ''}${k === 'steam' ? '<div class="steam-link" id="steamLink"></div>' : ''}</div>`;
 }).join('');
 // Tell people right away whether their Deadlock link will work
 let dlTimer = null;
@@ -2975,6 +3041,9 @@ function openProfileEditor(){
   renderSteamLinkBox();
   $('pDiscordId').value = draft.discordId;
   document.querySelectorAll('[data-tag]').forEach(i => i.value = draft.tags[i.dataset.tag] || '');
+  draft.specs = draft.specs || {}; draft.specsExtra = draft.specsExtra || [];
+  document.querySelectorAll('[data-spec]').forEach(i => i.value = draft.specs[i.dataset.spec] || '');
+  renderSpecExtra();
   $('pvLive').checked = draft.privacy.live; $('pvFollowers').checked = draft.privacy.followers;
   $('pvFriends').checked = draft.privacy.friends; $('pvJoined').checked = draft.privacy.joined; $('pvLibrary').checked = draft.privacy.library;
   syncPThemeInputs();
@@ -3000,6 +3069,7 @@ function readProfileForm(){
   draft.discordId = $('pDiscordId').value.trim();
   draft.tags = {};
   document.querySelectorAll('[data-tag]').forEach(i => { if (i.value.trim()) draft.tags[i.dataset.tag] = i.value.trim(); });
+  draft.specs = {}; document.querySelectorAll('[data-spec]').forEach(i => { if (i.value.trim()) draft.specs[i.dataset.spec] = i.value.trim(); });
   draft.privacy = { live:$('pvLive').checked, followers:$('pvFollowers').checked, friends:$('pvFriends').checked, joined:$('pvJoined').checked, library:$('pvLibrary').checked };
 }
 function previewDraft(){
@@ -3044,6 +3114,29 @@ function renderImgPreviews(){
   $('pAvatarPrev').style.backgroundImage = draft.avatar ? `url("${draft.avatar}")` : '';
   $('pBannerPrev').style.backgroundImage = draft.banner ? `url("${draft.banner}")` : '';
 }
+$('pSpecs').innerHTML = SPEC_GROUPS.map(([name, fields]) => `<table class="spec-edit"><caption>${name}</caption>` + fields.map(([k, label, ph]) =>
+  `<tr><th><label for="spec-${k}">${label}</label></th><td><input type="text" id="spec-${k}" data-spec="${k}" maxlength="80" placeholder="${esc(ph)}"></td></tr>`).join('') + '</table>').join('');
+function renderSpecExtra(){
+  $('pSpecExtra').innerHTML = draft.specsExtra.map((r, i) => `<div class="spec-extra">
+      <input type="text" data-spec-l="${i}" value="${esc(r.l)}" maxlength="30" placeholder="Name" aria-label="Row name">
+      <input type="text" data-spec-v="${i}" value="${esc(r.v)}" maxlength="80" placeholder="What you have" aria-label="Row value">
+      <button type="button" class="del" data-spec-del="${i}" aria-label="Remove">✕</button></div>`).join('');
+}
+$('pSpecAdd').addEventListener('click', () => {
+  if (draft.specsExtra.length >= 10) return toast('Up to 10 extra rows');
+  draft.specsExtra.push({ l:'', v:'' }); renderSpecExtra();
+  $('pSpecExtra').querySelector(`[data-spec-l="${draft.specsExtra.length - 1}"]`).focus();
+});
+$('pSpecExtra').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.specL !== undefined) draft.specsExtra[+t.dataset.specL].l = t.value;
+  if (t.dataset.specV !== undefined) draft.specsExtra[+t.dataset.specV].v = t.value;
+  previewDraft();
+});
+$('pSpecExtra').addEventListener('click', e => {
+  const b = e.target.closest('[data-spec-del]'); if (!b) return;
+  draft.specsExtra.splice(+b.dataset.specDel, 1); renderSpecExtra(); previewDraft();
+});
 function renderAltEditor(){
   const opts = GAMER_TAGS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('');
   $('pAlts').innerHTML = draft.alts.length ? draft.alts.map((a, i) => `
