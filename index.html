@@ -351,6 +351,7 @@ dialog > form{display:contents}
 /* Profile sections */
 .p-sec{margin-top:24px}
 .p-sec h2{font-size:1.15rem;margin:0 0 12px}
+.sub-label{display:block;margin-top:8px;font-size:.8rem;color:var(--muted)}
 .p-sec.widget{border:1.5px dashed var(--line);border-radius:var(--radius);padding:10px 14px 14px;background:color-mix(in srgb, var(--panel) 60%, transparent);cursor:grab;transition:opacity .15s, box-shadow .15s}
 .p-sec.widget.off{opacity:.5}
 .p-sec.widget.dragging{opacity:.35}
@@ -2232,13 +2233,14 @@ function tagLink(key, value, s){
   if (key === 'league'){ const r = riotParts(v); return r ? `https://u.gg/lol/profile/${s.leagueRegion || 'na1'}/${e((r[0] + '-' + r[1]).toLowerCase())}/overview` : ''; }
   if (key === 'valorant'){ const r = riotParts(v); return r ? `https://u.gg/val/profile/${e(r[0])}-${e(r[1])}` : ''; }
   if (key === 'xbox') return `https://www.xbox.com/play/user/${e(v)}`;
-  if (key === 'psn') return `https://psnprofiles.com/${e(v)}`;
+  if (key === 'psn'){ const own = safeUrl(s.tags.psnLink); return own || `https://psnprofiles.com/${e(v)}`; }
   if (key === 'discord' && s.discordId) return `https://discord.com/users/${s.discordId}`;
   return '';
 }
 function tagText(key, value, s){
   const v = String(value).trim();
-  if (key === 'deadlock') return 'Stats';
+  if (key === 'deadlock') return 'Deadlock';   // swapped for your Steam name once it loads
+  if (key === 'switch' && s && s.tags && s.tags.switchName) return String(s.tags.switchName);
   if (s && s.hideTagNumbers && ['league','valorant','battlenet'].includes(key)){ const r = riotParts(v); if (r) return r[0]; }
   if (!safeUrl(v)) return v;
   if (key === 'steam') return steamIdFrom(v);
@@ -2247,16 +2249,17 @@ function tagText(key, value, s){
 
 /* ---------- Logos for gamer tags ----------
    Most come from Simple Icons (free brand icons). Xbox, Switch and
-   Deadlock aren't in that set, so they get simple drawn icons. */
+   Deadlock aren't in that set, so they're built in here. */
 const TAG_SHORT = { steam:'Steam', league:'LoL', valorant:'VAL', deadlock:'DL', battlenet:'B.net', epic:'Epic', xbox:'Xbox', psn:'PSN', switch:'Switch', discord:'Discord' };
 const LOGO_SLUGS = { steam:'steam', league:'leagueoflegends', valorant:'valorant', battlenet:'battledotnet', epic:'epicgames', psn:'playstation', discord:'discord' };
 const DRAWN_LOGOS = {
-  xbox: '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M7.8 7.2 16.2 16.8M16.2 7.2 7.8 16.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
   switch: '<rect x="2.5" y="3" width="8.5" height="18" rx="4.25"/><rect x="13.3" y="4.2" width="7.6" height="15.6" rx="3.8" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="6.75" cy="8.2" r="1.7" fill="var(--panel-2)"/><circle cx="17.1" cy="14.6" r="1.7"/>',
 };
 const DEADLOCK_ICON = 'data:image/png;base64,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';
+const XBOX_ICON = 'data:image/png;base64,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';
+const MASK_LOGOS = { deadlock:DEADLOCK_ICON, xbox:XBOX_ICON };
 function logoHTML(key, label){
-  if (key === 'deadlock') return `<span class="tag-logo" role="img" aria-label="${esc(label)}"><i class="mask-logo" style="--m:url(${DEADLOCK_ICON})"></i></span>`;
+  if (MASK_LOGOS[key]) return `<span class="tag-logo" role="img" aria-label="${esc(label)}"><i class="mask-logo" style="--m:url(${MASK_LOGOS[key]})"></i></span>`;
   if (DRAWN_LOGOS[key]) return `<span class="tag-logo" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 24 24" aria-hidden="true">${DRAWN_LOGOS[key]}</svg></span>`;
   return `<span class="tag-logo" role="img" aria-label="${esc(label)}" data-logo="${LOGO_SLUGS[key]}"><small>${esc(TAG_SHORT[key])}</small></span>`;
 }
@@ -2275,6 +2278,19 @@ function hydrateLogos(root){
   root.querySelectorAll('[data-logo]').forEach(async el => {
     const d = await loadLogo(el.dataset.logo);
     if (d && el.isConnected){ el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`; el.removeAttribute('data-logo'); }
+  });
+}
+
+// Deadlock tags show the player's Steam name (looked up through the Steam helper)
+const dlNames = {}, dlLoading = {};
+function hydrateDeadlockNames(root){
+  root.querySelectorAll('[data-dl-name]').forEach(el => {
+    const id = el.dataset.dlName;
+    if (dlNames[id]){ el.textContent = dlNames[id]; return; }
+    if (!accountsOn() || !/^\d{17}$/.test(id)) return;
+    dlLoading[id] = dlLoading[id] || fetch(`${STEAM_FN}?action=status&id=${id}`, { headers:{ apikey:SUPABASE_KEY } })
+      .then(r => r.ok ? r.json() : null).then(j => { if (j && j.name) dlNames[id] = String(j.name).slice(0, 60); }).catch(() => {});
+    dlLoading[id].then(() => { if (dlNames[id]) root.querySelectorAll(`[data-dl-name="${id}"]`).forEach(x => x.textContent = dlNames[id]); });
   });
 }
 
@@ -2403,11 +2419,19 @@ function profileHTML(s, m){
   const pill = (k, label, value, ctx, verifiedSteam, extraCls = '') => {
     const link = verifiedSteam ? `https://steamcommunity.com/profiles/${m.steam.steamid}` : tagLink(k, value, ctx);
     const region = k === 'league' ? ` <small>${esc((LEAGUE_REGIONS.find(r => r[0] === ctx.leagueRegion) || ['', 'NA'])[1])}</small>` : '';
-    const text = (verifiedSteam ? esc(m.steam.name || tagText(k, value || '', ctx)) + ' <span class="verified" title="Verified through Steam sign-in">✓</span>' : esc(tagText(k, value, ctx))) + region;
+    let text = (verifiedSteam ? esc(m.steam.name || tagText(k, value || '', ctx)) + ' <span class="verified" title="Verified through Steam sign-in">✓</span>' : esc(tagText(k, value, ctx))) + region;
+    if (k === 'deadlock'){   // show the Steam name, like Tracklock does
+      const id = deadlockId(value) || deadlockId(ctx.tags.steam);
+      if (id){
+        const id64 = (BigInt(id) + 76561197960265728n).toString();
+        const known = dlNames[id64] || (m.steam && m.steam.linked && m.steam.steamid === id64 && m.steam.name) || '';
+        text = `<span data-dl-name="${id64}">${esc(known || 'Deadlock')}</span>`;
+      }
+    }
     const name = s.tagStyle === 'logo' ? logoHTML(k, label) : `<small>${esc(s.tagStyle === 'short' ? TAG_SHORT[k] : label)}</small>`;
     return link
       ? `<a class="tag ${extraCls}" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(label)}">${name}${text}<span class="go">↗</span></a>`
-      : `<button class="tag ${extraCls}" data-copy="${esc(value)}" title="${esc(label)}: click to copy">${name}${text}</button>`;
+      : `<button class="tag ${extraCls}" data-copy="${esc(value)}" title="${esc(label)}: click to copy ${k === 'switch' ? 'friend code ' + esc(value) : ''}">${name}${text}</button>`;
   };
   const tags = GAMER_TAGS.filter(([k]) => s.tags[k] || (k === 'steam' && steamOk))
     .map(([k, label]) => pill(k, label, s.tags[k], s, k === 'steam' && steamOk)).join('');
@@ -2473,6 +2497,7 @@ function paintProfile(snap, meta){
   currentSnap = snap;
   $('pBody').innerHTML = profileHTML(snap, meta);
   hydrateLogos($('pBody'));
+  hydrateDeadlockNames($('pBody'));
   paintLive(snap, meta);
 }
 
@@ -2881,14 +2906,19 @@ const TAG_HELP = {
   league:['(Riot ID → opens U.GG)', 'Name#TAG'],
   valorant:['(Riot ID → opens U.GG)', 'Name#TAG'],
   deadlock:['(Steam ID number → opens U.GG Tracklock)', '76561198… or steamcommunity.com/profiles/…'],
-  battlenet:['', 'Name#1234'], switch:['', 'SW-1234-5678-9012']
+  battlenet:['', 'Name#1234'], psn:['(online ID)', 'Your PSN name'], switch:['(friend code, copied when clicked)', 'SW-1234-5678-9012']
+};
+// Second boxes under some tags (saved with your tags)
+const TAG_EXTRA = {
+  psn:['psnLink', 'Profile link (optional)', 'https://… link to your PlayStation profile', 'Without one, it opens PSNProfiles. That only works once your name has been added there: go to psnprofiles.com, type your PSN name and press Enter (your trophies need to be public).'],
+  switch:['switchName', 'Name shown on your tag', 'Your Switch user name', "Nintendo doesn't have public profile pages, so clicking your tag copies your friend code for people to add you on their Switch."]
 };
 $('pTags').innerHTML = GAMER_TAGS.map(([k, label]) => {
   const [help, ph] = TAG_HELP[k] || ['', ''];
   const input = `<input type="text" id="tag-${k}" data-tag="${k}" maxlength="120" placeholder="${esc(ph)}">`;
   return `<div><label for="tag-${k}">${label} ${help ? `<span class="hint">${help}</span>` : ''}</label>${k === 'league'
     ? `<div style="display:grid;grid-template-columns:1fr 90px;gap:6px">${input}<select id="pLeagueRegion" aria-label="League region">${LEAGUE_REGIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></div>`
-    : input}${k === 'deadlock' ? '<div class="name-state" id="dlState"></div>' : ''}${k === 'steam' ? '<div class="steam-link" id="steamLink"></div>' : ''}</div>`;
+    : input}${TAG_EXTRA[k] ? (([key, lab, ph2, help2]) => `<label for="tag-${key}" class="sub-label">${lab}</label><input type="text" id="tag-${key}" data-tag="${key}" maxlength="120" placeholder="${esc(ph2)}"><p class="hint" style="margin:4px 0 0">${help2}</p>`)(TAG_EXTRA[k]) : ''}${k === 'deadlock' ? '<div class="name-state" id="dlState"></div>' : ''}${k === 'steam' ? '<div class="steam-link" id="steamLink"></div>' : ''}</div>`;
 }).join('');
 // Tell people right away whether their Deadlock link will work
 let dlTimer = null;
