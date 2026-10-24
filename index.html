@@ -351,6 +351,17 @@ dialog > form{display:contents}
 /* Profile sections */
 .p-sec{margin-top:24px}
 .p-sec h2{font-size:1.15rem;margin:0 0 12px}
+.p-sec.widget{border:1.5px dashed var(--line);border-radius:var(--radius);padding:10px 14px 14px;background:color-mix(in srgb, var(--panel) 60%, transparent);cursor:grab;transition:opacity .15s, box-shadow .15s}
+.p-sec.widget.off{opacity:.5}
+.p-sec.widget.dragging{opacity:.35}
+.p-sec.widget.drop-before{box-shadow:0 -4px 0 0 var(--accent)}
+.p-sec.widget.drop-after{box-shadow:0 4px 0 0 var(--accent)}
+.w-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.w-bar h2{margin:0;flex:1;min-width:0}
+.w-bar .grip{color:var(--muted);font-size:1.2rem;cursor:grab;user-select:none}
+.w-btns{display:flex;gap:6px;flex-shrink:0}
+.w-empty{margin:0}
+.arrange-note{margin-top:18px}
 .p-stats{grid-template-columns:repeat(6,1fr)}
 .minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .mini{all:unset;box-sizing:border-box;display:grid;gap:3px}
@@ -2086,12 +2097,27 @@ function profileTheme(p){
 }
 const miniData = g => ({ id:g.id, title:g.title, cover:g.cover, status:statusMap(g)[g.status] });
 
-function buildSnapshot(p = profile){
+const SNAP_LISTS = ['playing','favorites','ranks','clips','collection','library'];
+const SNAP_MAX = 1200000;
+function buildSnapshot(p = profile, { local = false } = {}){
   const snap = buildSnapshotRaw(p);
-  if (JSON.stringify(snap).length > 1200000){
-    const strip = x => ({ ...x, cover: String(x.cover).startsWith('data:') ? '' : x.cover });
-    ['playing','favorites','ranks','clips','collection','library'].forEach(k => { if (Array.isArray(snap[k])) snap[k] = snap[k].map(strip); });
-    for (const v of Object.values(snap.steamCustom || {})) if (String(v.c).startsWith('data:')) v.c = '';
+  if (local) return snap;   // your own view: every picture, nothing left out
+  // Pictures saved inside the browser are stored ONCE and shared by every list
+  // (before, a cover in Library + Now playing + Favorites was saved three times)
+  const pics = [], at = new Map();
+  const ref = c => {
+    if (!String(c || '').startsWith('data:')) return c;
+    if (!at.has(c)){ at.set(c, pics.length); pics.push(c); }
+    return 'pic:' + at.get(c);
+  };
+  SNAP_LISTS.forEach(k => { if (Array.isArray(snap[k])) snap[k] = snap[k].map(x => ({ ...x, cover:ref(x.cover) })); });
+  for (const v of Object.values(snap.steamCustom || {})) v.c = ref(v.c);
+  snap.pics = pics;
+  // Still too big? Leave out the biggest pictures first, not all of them
+  let size = JSON.stringify(snap).length;
+  for (const i of pics.map((_, i) => i).sort((a, b) => pics[b].length - pics[a].length)){
+    if (size <= SNAP_MAX) break;
+    size -= pics[i].length; pics[i] = '';
   }
   return snap;
 }
@@ -2137,6 +2163,14 @@ function buildSnapshotRaw(p){
 // Clean up a snapshot that came from someone else (never trust it blindly)
 function normalizeSnap(d){
   d = d && typeof d === 'object' ? d : {};
+  if (Array.isArray(d.pics)){   // turn "pic:3" back into the picture
+    const pics = d.pics.slice(0, 2000).map(x => typeof x === 'string' && x.startsWith('data:image/') ? x : '');
+    const r = v => typeof v === 'string' && /^pic:\d{1,4}$/.test(v) ? (pics[+v.slice(4)] || '') : v;
+    d = { ...d };
+    SNAP_LISTS.forEach(k => { if (Array.isArray(d[k])) d[k] = d[k].map(x => x && typeof x === 'object' ? { ...x, cover:r(x.cover) } : x); });
+    if (d.steamCustom && typeof d.steamCustom === 'object')
+      d.steamCustom = Object.fromEntries(Object.entries(d.steamCustom).map(([k, v]) => [k, v && typeof v === 'object' ? { ...v, c:r(v.c) } : v]));
+  }
   const base = normalizeProfile({ ...d, pTheme:{ ...(d.theme || {}), mode:'custom' } });
   const str = (v, n) => String(v ?? '').slice(0, n);
   const list = (a, n) => Array.isArray(a) ? a.filter(x => x && typeof x === 'object').slice(0, n) : [];
@@ -2344,7 +2378,8 @@ function profileHTML(s, m){
 
   let actions = '';
   if (m.isMe){
-    actions = `<button class="btn" data-action="edit-profile">Edit profile</button>`;
+    actions = `<button class="btn" data-action="edit-profile">Edit profile</button>
+               <button class="btn ${arranging ? 'primary' : ''}" data-action="arrange" title="Move your profile sections around">${arranging ? '✓ Done' : '✥ Arrange'}</button>`;
     if (m.username) actions += `<button class="btn" data-copy-link="${esc(m.username)}" title="Copy profile link">🔗</button>`;
   } else {
     const st = m.followState;
@@ -2381,10 +2416,23 @@ function profileHTML(s, m){
     return pill(a.key, label, a.value, { ...s, leagueRegion:a.region, tags:{} }, false, 'alt');
   }).join('');
 
-  const sections = s.sections.filter(x => x.on).map(x => {
+  const arr = m.isMe && arranging && !previewSnap;
+  const last = s.sections.length - 1;
+  const sections = (arr ? s.sections : s.sections.filter(x => x.on)).map((x, i) => {
     const body = sectionHTML(x.key, s, m);
-    return body ? `<section class="p-sec"><h2>${SECTION_LABELS[x.key]}</h2>${body}</section>` : '';
+    if (!arr) return body ? `<section class="p-sec"><h2>${SECTION_LABELS[x.key]}</h2>${body}</section>` : '';
+    // Arrange mode: every section is a widget you can drag, move or hide
+    return `<section class="p-sec widget ${x.on ? '' : 'off'}" draggable="true" data-widget="${esc(x.key)}">
+      <div class="w-bar"><span class="grip" aria-hidden="true">⠿</span><h2>${SECTION_LABELS[x.key]}</h2>
+        <span class="w-btns">
+          <button class="btn small" data-w-move="${esc(x.key)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+          <button class="btn small" data-w-move="${esc(x.key)}" data-dir="1" ${i === last ? 'disabled' : ''} aria-label="Move down">↓</button>
+          <button class="btn small" data-w-toggle="${esc(x.key)}">${x.on ? 'Hide' : 'Show'}</button>
+        </span></div>
+      ${x.on ? (body || '<p class="hint w-empty">Nothing here yet, so visitors won\'t see this section.</p>') : '<p class="hint w-empty">Hidden from your profile.</p>'}
+    </section>`;
   }).join('');
+  const arrNote = arr ? `<div class="p-note arrange-note"><span>✥ Drag sections to reorder them, or use the arrows. Changes save by themselves.</span><button class="btn primary small" data-action="arrange">Done</button></div>` : '';
 
   const cls = ['p-card', s.bannerStyle === 'none' ? 'no-banner' : '', s.avatarPos === 'center' ? 'center' : ''].join(' ');
   return `<div class="pview" style="${esc(profileStyle(t))}" data-bg="${esc(t.bgEffect)}" data-head="${esc(t.headFont)}">
@@ -2405,7 +2453,7 @@ function profileHTML(s, m){
       ${tags ? `<div class="tags">${tags}</div>` : ''}
       ${alts ? `<div class="alts"><span class="alts-label">Alt accounts</span>${alts}</div>` : ''}
     </div>
-    ${sections || (m.isMe ? `<div class="empty" style="margin-top:20px"><p>Add some games and your profile fills up with badges, stats, favorites, ranks and clips.</p></div>` : '')}
+    ${arrNote}${sections || (m.isMe ? `<div class="empty" style="margin-top:20px"><p>Add some games and your profile fills up with badges, stats, favorites, ranks and clips.</p></div>` : '')}
   </div>`;
 }
 
@@ -2451,7 +2499,7 @@ function paintTop(){
 
 function renderProfile(){
   paintTop();
-  const snap = previewSnap || buildSnapshot(profile);
+  const snap = previewSnap || buildSnapshot(profile, { local:true });
   paintProfile(snap, { isMe:true, id: user && myRow ? user.id : null, username: myRow ? myRow.username : '', joined: myRow ? myRow.joined_at : '' });
 }
 
@@ -2636,8 +2684,57 @@ function paintLive(s, m){
 }
 setInterval(() => {   // refresh status (and the profile you're looking at) every minute
   if (view === 'user') viewedUser = null;
+  if (dragWidget) return;   // don't redraw while you're dragging a section
   if (view === 'profile' || view === 'user') render();
 }, 60000);
+
+/* ---------- Arranging your profile (drag the sections like widgets) ---------- */
+let arranging = false, dragWidget = null;
+function placeWidget(key, to){
+  const list = profile.sections, from = list.findIndex(x => x.key === key);
+  if (from < 0) return;
+  const [item] = list.splice(from, 1);
+  list.splice(Math.max(0, Math.min(list.length, to > from ? to - 1 : to)), 0, item);
+  saveProfile(); render();
+}
+const pBodyEl = $('pBody');
+pBodyEl.addEventListener('click', e => {
+  const mv = e.target.closest('[data-w-move]');
+  if (mv){
+    const i = profile.sections.findIndex(x => x.key === mv.dataset.wMove), d = +mv.dataset.dir;
+    return placeWidget(mv.dataset.wMove, d > 0 ? i + 2 : i - 1);
+  }
+  const tg = e.target.closest('[data-w-toggle]');
+  if (tg){ const sec = profile.sections.find(x => x.key === tg.dataset.wToggle); if (sec){ sec.on = !sec.on; saveProfile(); render(); } }
+});
+const clearDropMarks = () => pBodyEl.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+pBodyEl.addEventListener('dragstart', e => {
+  const w = e.target.closest && e.target.closest('[data-widget]');
+  if (!w || !arranging) return;
+  dragWidget = w.dataset.widget; w.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', dragWidget); } catch(err){}
+});
+pBodyEl.addEventListener('dragover', e => {
+  if (!dragWidget) return;
+  const w = e.target.closest('[data-widget]');
+  if (!w) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  const r = w.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+  clearDropMarks();
+  if (w.dataset.widget !== dragWidget) w.classList.add(after ? 'drop-after' : 'drop-before');
+});
+pBodyEl.addEventListener('drop', e => {
+  if (!dragWidget) return;
+  e.preventDefault();
+  const w = e.target.closest('[data-widget]'), key = dragWidget;
+  dragWidget = null; clearDropMarks();
+  if (!w || w.dataset.widget === key) return render();
+  const r = w.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+  const i = profile.sections.findIndex(x => x.key === w.dataset.widget);
+  placeWidget(key, after ? i + 1 : i);
+});
+pBodyEl.addEventListener('dragend', () => { if (dragWidget){ dragWidget = null; clearDropMarks(); render(); } });
 
 /* ---------- Usernames ---------- */
 async function nameStatus(n){
@@ -2877,7 +2974,7 @@ function readProfileForm(){
 }
 function previewDraft(){
   if (view !== 'profile') return;
-  previewSnap = buildSnapshot(normalizeProfile(draft));
+  previewSnap = buildSnapshot(normalizeProfile(draft), { local:true });
   renderProfile();
 }
 $('profileForm').addEventListener('input', e => {
@@ -3037,9 +3134,13 @@ async function moveOldPicturesToStorage(){
     for (const [field, kind] of [['avatar','avatar'], ['banner','banner']]){
       if (String(profile[field]).startsWith('data:')){ profile[field] = await uploadMedia(await toBlob(profile[field]), kind); changedProfile = true; }
     }
+    let failed = 0;
     for (const g of games){
-      if (String(g.cover).startsWith('data:')){ g.cover = await uploadMedia(await toBlob(g.cover), 'cover'); changedGames = true; }
+      if (!String(g.cover).startsWith('data:')) continue;
+      try { g.cover = await uploadMedia(await toBlob(g.cover), 'cover'); changedGames = true; }
+      catch(err){ failed++; console.warn('moving cover', g.title, err); }
     }
+    if (failed) toast(`${failed} picture${failed === 1 ? '' : 's'} couldn't move to picture storage, so visitors may not see ${failed === 1 ? 'it' : 'them'}. Run 4-pictures.sql in Supabase.`);
     if (changedProfile) saveProfile();
     if (changedGames) saveGames();
     if (changedProfile || changedGames) render();
@@ -3738,7 +3839,8 @@ document.addEventListener('click', e => {
   if (coll) return openCollForm(coll.dataset.coll);
   const action = t.closest('[data-action]');
   if (action && action.dataset.action === 'add') return openForm(null, mode());
-  if (action && action.dataset.action === 'edit-profile') return openProfileEditor();
+  if (action && action.dataset.action === 'edit-profile'){ arranging = false; return openProfileEditor(); }
+  if (action && action.dataset.action === 'arrange'){ arranging = !arranging; return render(); }
   if (action && action.dataset.action === 'signin') return openAccount();
   if (action && action.dataset.action === 'pick-username') return openUsernameDlg();
   const copy = t.closest('[data-copy]');
